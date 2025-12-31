@@ -10,6 +10,148 @@ class BSC_Frontend_Display {
 		add_filter( 'the_content', array( $this, 'display_recipe_details' ) );
 		add_action( 'wp_footer', array( $this, 'render_tasting_modal' ) );
 		add_action( 'init', array( $this, 'handle_tasting_request' ) );
+
+		add_shortcode( 'bsc_breweries_list', array( $this, 'render_breweries_list' ) );
+		add_shortcode( 'bsc_beers_list', array( $this, 'render_beers_list' ) );
+	}
+
+	public function render_breweries_list( $atts ) {
+		$sort = isset( $_GET['bsc_sort'] ) ? sanitize_text_field( $_GET['bsc_sort'] ) : 'name';
+
+		$args = array(
+			'post_type' => 'bsc_brewery',
+			'post_status' => 'publish',
+			'posts_per_page' => 12,
+			'paged' => get_query_var('paged') ? get_query_var('paged') : 1,
+		);
+
+		switch ( $sort ) {
+			case 'rating':
+				$args['meta_key'] = 'bsc_average_rating';
+				$args['orderby'] = 'meta_value_num';
+				$args['order'] = 'DESC';
+				break;
+			case 'beers':
+				$args['meta_key'] = 'bsc_beer_count';
+				$args['orderby'] = 'meta_value_num';
+				$args['order'] = 'DESC';
+				break;
+			case 'name':
+			default:
+				$args['orderby'] = 'title';
+				$args['order'] = 'ASC';
+				break;
+		}
+
+		$query = new WP_Query( $args );
+
+		ob_start();
+		echo '<div class="bsc-breweries-list">';
+		if ( $query->have_posts() ) {
+			echo '<div class="bsc-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap:20px;">';
+			while ( $query->have_posts() ) {
+				$query->the_post();
+				$rating = get_post_meta( get_the_ID(), 'bsc_average_rating', true );
+				$count = get_post_meta( get_the_ID(), 'bsc_beer_count', true );
+				?>
+				<div class="bsc-card" style="border:1px solid #ddd; padding:15px; border-radius:5px;">
+					<?php if ( has_post_thumbnail() ) {
+						echo '<div style="margin-bottom:10px;">' . get_the_post_thumbnail( get_the_ID(), 'medium' ) . '</div>';
+					} ?>
+					<h3><a href="<?php the_permalink(); ?>"><?php the_title(); ?></a></h3>
+					<p><?php echo wp_trim_words( get_the_excerpt(), 10 ); ?></p>
+					<div class="bsc-meta">
+						<span>⭐ <?php echo esc_html( $rating ? $rating : '-' ); ?>/5</span> |
+						<span>🍺 <?php echo esc_html( $count ? $count : 0 ); ?></span>
+					</div>
+				</div>
+				<?php
+			}
+			echo '</div>';
+
+			// Pagination
+			echo '<div class="bsc-pagination" style="margin-top:20px;">';
+			echo paginate_links( array( 'total' => $query->max_num_pages ) );
+			echo '</div>';
+		} else {
+			echo '<p>' . __( 'Aucune brasserie trouvée.', 'bsc-brew-manager' ) . '</p>';
+		}
+		echo '</div>';
+		wp_reset_postdata();
+
+		return ob_get_clean();
+	}
+
+	public function render_beers_list( $atts ) {
+		$sort = isset( $_GET['bsc_sort'] ) ? sanitize_text_field( $_GET['bsc_sort'] ) : 'date';
+		$style = isset( $_GET['bsc_style'] ) ? sanitize_text_field( $_GET['bsc_style'] ) : '';
+
+		$args = array(
+			'post_type' => 'bsc_recipe',
+			'post_status' => 'publish',
+			'posts_per_page' => 12,
+			'paged' => get_query_var('paged') ? get_query_var('paged') : 1,
+		);
+
+		if ( ! empty( $style ) ) {
+			$args['meta_key'] = 'bsc_style';
+			$args['meta_value'] = $style;
+		}
+
+		switch ( $sort ) {
+			case 'rating':
+				$args['meta_key'] = 'bsc_average_rating'; // Assuming beers have their own rating
+				$args['orderby'] = 'meta_value_num';
+				$args['order'] = 'DESC';
+				break;
+			case 'name':
+				$args['orderby'] = 'title';
+				$args['order'] = 'ASC';
+				break;
+			case 'date':
+			default:
+				$args['orderby'] = 'date';
+				$args['order'] = 'DESC';
+				break;
+		}
+
+		$query = new WP_Query( $args );
+
+		ob_start();
+		echo '<div class="bsc-beers-list">';
+		if ( $query->have_posts() ) {
+			echo '<div class="bsc-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap:20px;">';
+			while ( $query->have_posts() ) {
+				$query->the_post();
+				$rating = get_post_meta( get_the_ID(), 'bsc_average_rating', true );
+				$beer_style = get_post_meta( get_the_ID(), 'bsc_style', true );
+				$abv = get_post_meta( get_the_ID(), 'bsc_abv', true );
+				?>
+				<div class="bsc-card" style="border:1px solid #ddd; padding:15px; border-radius:5px;">
+					<?php if ( has_post_thumbnail() ) {
+						echo '<div style="margin-bottom:10px;">' . get_the_post_thumbnail( get_the_ID(), 'medium' ) . '</div>';
+					} ?>
+					<h3><a href="<?php the_permalink(); ?>"><?php the_title(); ?></a></h3>
+					<p><em><?php echo esc_html( $beer_style ); ?> - <?php echo esc_html( $abv ); ?>%</em></p>
+					<div class="bsc-meta">
+						<span>⭐ <?php echo esc_html( $rating ? $rating : '-' ); ?>/5</span>
+					</div>
+				</div>
+				<?php
+			}
+			echo '</div>';
+
+			// Pagination
+			echo '<div class="bsc-pagination" style="margin-top:20px;">';
+			echo paginate_links( array( 'total' => $query->max_num_pages ) );
+			echo '</div>';
+		} else {
+			echo '<p>' . __( 'Aucune bière trouvée.', 'bsc-brew-manager' ) . '</p>';
+		}
+		echo '</div>';
+		wp_reset_postdata();
+
+		return ob_get_clean();
 	}
 
 	public function display_recipe_details( $content ) {
