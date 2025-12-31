@@ -44,10 +44,12 @@ class BSC_Brew_Manager {
 		require_once BSC_BREW_MANAGER_PATH . 'includes/class-bsc-reviews.php';
 		new BSC_Reviews();
 
-		if ( did_action( 'elementor/loaded' ) ) {
-			require_once BSC_BREW_MANAGER_PATH . 'includes/elementor/class-bsc-elementor.php';
-			new BSC_Elementor();
-		}
+		add_action( 'elementor/init', array( $this, 'load_elementor_support' ) );
+	}
+
+	public function load_elementor_support() {
+		require_once BSC_BREW_MANAGER_PATH . 'includes/elementor/class-bsc-elementor.php';
+		new BSC_Elementor();
 	}
 
 	public function register_cpt() {
