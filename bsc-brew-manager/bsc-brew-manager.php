@@ -73,7 +73,7 @@ class BSC_Brew_Manager {
 		new BSC_Dashboard();
 
 		require_once BSC_BREW_MANAGER_PATH . 'includes/elementor/class-bsc-elementor.php';
-		// BSC_Elementor_Manager is initialized via 'plugins_loaded' hook inside the file.
+		BSC_Elementor_Manager::init();
 	}
 
 	public function register_cpt() {

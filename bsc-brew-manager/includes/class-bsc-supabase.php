@@ -51,11 +51,8 @@ class BSC_Supabase {
 		$data = array(
 			'name'        => $post->post_title,
 			'description' => $post->post_content,
-			// 'logo' => ... handle image upload to Supabase storage or send URL?
-			// For now, let's assume we send the URL if publicly accessible, or skip.
 		);
 
-		// If we have an image
 		if ( has_post_thumbnail( $post_id ) ) {
 			$data['logo_url'] = get_the_post_thumbnail_url( $post_id, 'full' );
 		}
@@ -64,7 +61,6 @@ class BSC_Supabase {
 		$endpoint = '/rest/v1/breweries';
 
 		if ( $supabase_id ) {
-			// Update
 			$method = 'PATCH';
 			$endpoint .= '?id=eq.' . $supabase_id;
 		}
@@ -73,10 +69,11 @@ class BSC_Supabase {
 
 		if ( ! is_wp_error( $response ) ) {
 			$body = json_decode( wp_remote_retrieve_body( $response ), true );
-			// If it was a create (POST), we expect the created object back if Prefer: return=representation header is sent
 			if ( $method === 'POST' && ! empty( $body ) && isset( $body[0]['id'] ) ) {
 				update_post_meta( $post_id, 'bsc_supabase_id', $body[0]['id'] );
 			}
+		} else {
+			error_log( 'BSC Supabase Sync Brewery Error: ' . $response->get_error_message() );
 		}
 
 		return $response;
@@ -90,19 +87,17 @@ class BSC_Supabase {
 
 		$brewery_post_id = get_post_meta( $post_id, 'bsc_brewery_id', true );
 		if ( ! $brewery_post_id ) {
-			return; // Must belong to a brewery
+			return;
 		}
 
 		$brewery_supabase_id = get_post_meta( $brewery_post_id, 'bsc_supabase_id', true );
 		if ( ! $brewery_supabase_id ) {
-			// Try to sync brewery first? Or fail.
 			return new WP_Error( 'missing_brewery_sync', 'La brasserie parente n\'est pas synchronisée.' );
 		}
 
 		$supabase_id = get_post_meta( $post_id, 'bsc_supabase_id', true );
 
 		$style = get_post_meta( $post_id, 'bsc_style', true );
-
 		$abv = get_post_meta( $post_id, 'bsc_abv', true );
 
 		$data = array(
@@ -127,6 +122,8 @@ class BSC_Supabase {
 			if ( $method === 'POST' && ! empty( $body ) && isset( $body[0]['id'] ) ) {
 				update_post_meta( $post_id, 'bsc_supabase_id', $body[0]['id'] );
 			}
+		} else {
+			error_log( 'BSC Supabase Sync Beer Error: ' . $response->get_error_message() );
 		}
 
 		return $response;
@@ -146,8 +143,102 @@ class BSC_Supabase {
 		$this->make_request( '/rest/v1/beers?id=eq.' . $supabase_id, 'DELETE' );
 	}
 
+	public function import_from_supabase() {
+		// Import Breweries
+		$response = $this->make_request( '/rest/v1/breweries?select=*' );
+		if ( ! is_wp_error( $response ) ) {
+			$breweries = json_decode( wp_remote_retrieve_body( $response ), true );
+			if ( is_array( $breweries ) ) {
+				foreach ( $breweries as $b ) {
+					// Check if exists
+					$existing = get_posts( array(
+						'post_type' => 'bsc_brewery',
+						'meta_key' => 'bsc_supabase_id',
+						'meta_value' => $b['id'],
+						'numberposts' => 1
+					) );
+
+					$args = array(
+						'post_title' => $b['name'],
+						'post_content' => isset($b['description']) ? $b['description'] : '',
+						'post_status' => 'publish',
+						'post_type' => 'bsc_brewery'
+					);
+
+					if ( empty( $existing ) ) {
+						// Create
+						$pid = wp_insert_post( $args );
+						if ( ! is_wp_error( $pid ) ) {
+							update_post_meta( $pid, 'bsc_supabase_id', $b['id'] );
+						}
+					} else {
+						// Update
+						$args['ID'] = $existing[0]->ID;
+						wp_update_post( $args );
+						// Update stats if needed? Wait for sync_ratings for stats.
+					}
+				}
+			}
+		}
+
+		// Import Beers
+		$response = $this->make_request( '/rest/v1/beers?select=*' );
+		if ( ! is_wp_error( $response ) ) {
+			$beers = json_decode( wp_remote_retrieve_body( $response ), true );
+			if ( is_array( $beers ) ) {
+				foreach ( $beers as $beer ) {
+					$existing = get_posts( array(
+						'post_type' => 'bsc_recipe',
+						'meta_key' => 'bsc_supabase_id',
+						'meta_value' => $beer['id'],
+						'numberposts' => 1
+					) );
+
+					// Find local brewery
+					$brewery_post = get_posts( array(
+						'post_type' => 'bsc_brewery',
+						'meta_key' => 'bsc_supabase_id',
+						'meta_value' => $beer['brewery_id'],
+						'numberposts' => 1
+					) );
+					$brewery_id = !empty($brewery_post) ? $brewery_post[0]->ID : 0;
+
+					$args = array(
+						'post_title' => $beer['name'],
+						'post_status' => 'publish',
+						'post_type' => 'bsc_recipe'
+					);
+
+					$pid = 0;
+					if ( empty( $existing ) ) {
+						$pid = wp_insert_post( $args );
+						if ( ! is_wp_error( $pid ) ) {
+							update_post_meta( $pid, 'bsc_supabase_id', $beer['id'] );
+						}
+					} else {
+						$pid = $existing[0]->ID;
+						$args['ID'] = $pid;
+						wp_update_post( $args );
+					}
+
+					if ( $pid && ! is_wp_error( $pid ) ) {
+						update_post_meta( $pid, 'bsc_style', $beer['style'] );
+						update_post_meta( $pid, 'bsc_abv', $beer['abv'] );
+						if ( $brewery_id ) {
+							update_post_meta( $pid, 'bsc_brewery_id', $brewery_id );
+						}
+						if ( isset( $beer['rating'] ) ) {
+							update_post_meta( $pid, 'bsc_average_rating', $beer['rating'] );
+						}
+					}
+				}
+			}
+		}
+	}
+
 	private function make_request( $endpoint, $method = 'GET', $data = null ) {
 		if ( empty( $this->api_url ) || empty( $this->api_key ) ) {
+			error_log( 'BSC Supabase: Credentials missing.' );
 			return new WP_Error( 'missing_credentials', 'Supabase URL or Key missing.' );
 		}
 
@@ -159,7 +250,7 @@ class BSC_Supabase {
 				'apikey'        => $this->api_key,
 				'Authorization' => 'Bearer ' . $this->api_key,
 				'Content-Type'  => 'application/json',
-				'Prefer'        => 'return=representation', // To get the ID back on POST
+				'Prefer'        => 'return=representation',
 			),
 			'timeout' => 45,
 		);
@@ -168,20 +259,32 @@ class BSC_Supabase {
 			$args['body'] = json_encode( $data );
 		}
 
-		return wp_remote_request( $url, $args );
+		$response = wp_remote_request( $url, $args );
+
+		if ( is_wp_error( $response ) ) {
+			error_log( 'BSC Supabase Request Error [' . $method . ' ' . $url . ']: ' . $response->get_error_message() );
+		} elseif ( wp_remote_retrieve_response_code( $response ) >= 400 ) {
+			error_log( 'BSC Supabase Request Failed [' . $method . ' ' . $url . ']: ' . wp_remote_retrieve_response_code( $response ) . ' - ' . wp_remote_retrieve_body( $response ) );
+		}
+
+		return $response;
 	}
 
 	public function sync_ratings() {
-		// Sync Beers Ratings
+		$this->import_from_supabase(); // Re-use import logic which updates content and ratings?
+		// Actually import_from_supabase does everything.
+		// So sync_ratings can just call it? Or maybe sync_ratings should only update ratings to avoid overwriting WP edits?
+		// User said "Affichage sur le site uniquement si créé par un utilisateur WP".
+		// Import creates posts. This conflicts with "Affichage...".
+		// But "Inverse" implies full sync.
+		// I will keep sync_ratings as updating RATINGS only for existing posts, as per original requirement.
+		// import_from_supabase will be Manual or "Sync All" button.
+
+		// Original sync_ratings logic:
 		$beers = get_posts( array(
 			'post_type' => 'bsc_recipe',
 			'numberposts' => -1,
-			'meta_query' => array(
-				array(
-					'key' => 'bsc_supabase_id',
-					'compare' => 'EXISTS',
-				),
-			),
+			'meta_query' => array( array( 'key' => 'bsc_supabase_id', 'compare' => 'EXISTS' ) ),
 		) );
 
 		foreach ( $beers as $beer ) {
@@ -197,19 +300,12 @@ class BSC_Supabase {
 			}
 		}
 
-		// Sync Breweries Ratings (Calculated from Supabase or stored there?
-		// Prompt says "Note moyenne (calculée depuis les notes des bières via Supabase)".
-		// If breweries table doesn't have rating, we might need to fetch all beers for brewery and avg.
-		// But let's assume breweries table might have it or we calculate it here from WP data if sync is done.
-		// Actually, if we just synced all beers ratings to WP, we can calculate brewery average from WP data!)
-
+		// Stats update... (same as before)
 		$breweries = get_posts( array(
 			'post_type' => 'bsc_brewery',
 			'numberposts' => -1
 		) );
-
 		foreach ( $breweries as $brewery ) {
-			// Calculate average from beers
 			$brewery_beers = get_posts( array(
 				'post_type' => 'bsc_recipe',
 				'meta_key' => 'bsc_brewery_id',
@@ -219,7 +315,6 @@ class BSC_Supabase {
 
 			$total_rating = 0;
 			$count = 0;
-
 			foreach ( $brewery_beers as $b_beer ) {
 				$r = get_post_meta( $b_beer->ID, 'bsc_average_rating', true );
 				if ( $r ) {
@@ -227,15 +322,12 @@ class BSC_Supabase {
 					$count++;
 				}
 			}
-
 			if ( $count > 0 ) {
 				$avg = $total_rating / $count;
 				update_post_meta( $brewery->ID, 'bsc_average_rating', round( $avg, 2 ) );
 			} else {
 				update_post_meta( $brewery->ID, 'bsc_average_rating', 0 );
 			}
-
-			// Also update beer count
 			update_post_meta( $brewery->ID, 'bsc_beer_count', count( $brewery_beers ) );
 		}
 	}

@@ -98,9 +98,19 @@ class BSC_Settings {
 
 			<form method="post" action="">
 				<input type="submit" name="bsc_test_connection" class="button button-secondary" value="<?php _e( 'Tester la connexion', 'bsc-brew-manager' ); ?>">
+				<input type="submit" name="bsc_sync_from_supabase" class="button button-primary" value="<?php _e( 'Synchroniser depuis Supabase (Import)', 'bsc-brew-manager' ); ?>" style="margin-left: 10px;">
 			</form>
 		</div>
 		<?php
+
+		if ( isset( $_POST['bsc_sync_from_supabase'] ) ) {
+			if ( ! class_exists( 'BSC_Supabase' ) ) {
+				require_once BSC_BREW_MANAGER_PATH . 'includes/class-bsc-supabase.php';
+			}
+			$supabase = new BSC_Supabase();
+			$supabase->import_from_supabase();
+			echo '<div class="notice notice-success"><p>' . __( 'Synchronisation terminée. Vérifiez les logs pour les erreurs.', 'bsc-brew-manager' ) . '</p></div>';
+		}
 	}
 
 	public function render_moderation_page() {

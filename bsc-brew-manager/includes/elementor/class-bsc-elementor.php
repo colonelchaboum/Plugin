@@ -37,6 +37,3 @@ class BSC_Elementor_Manager {
 		}
 	}
 }
-
-// Initialize
-add_action( 'plugins_loaded', array( 'BSC_Elementor_Manager', 'init' ) );
