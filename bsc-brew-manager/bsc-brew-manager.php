@@ -67,8 +67,8 @@ class BSC_Brew_Manager {
 		new BSC_Form_Handler();
 		require_once BSC_BREW_MANAGER_PATH . 'includes/class-bsc-display.php';
 		new BSC_Frontend_Display();
-		require_once BSC_BREW_MANAGER_PATH . 'includes/class-bsc-reviews.php';
-		new BSC_Reviews();
+		require_once BSC_BREW_MANAGER_PATH . 'includes/class-bsc-review-handler.php';
+		new BSC_Review_Handler();
 		require_once BSC_BREW_MANAGER_PATH . 'includes/class-bsc-dashboard.php';
 		new BSC_Dashboard();
 
