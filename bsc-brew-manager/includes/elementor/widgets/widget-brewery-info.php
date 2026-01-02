@@ -44,6 +44,57 @@ class BSC_Elementor_Brewery_Info_Widget extends \Elementor\Widget_Base {
 		);
 
 		$this->end_controls_section();
+
+		// Style Tab
+		$this->start_controls_section(
+			'section_style_title',
+			array(
+				'label' => __( 'Titre', 'bsc-brew-manager' ),
+				'tab' => \Elementor\Controls_Manager::TAB_STYLE,
+			)
+		);
+
+		$this->add_control(
+			'title_color',
+			array(
+				'label' => __( 'Couleur', 'bsc-brew-manager' ),
+				'type' => \Elementor\Controls_Manager::COLOR,
+				'selectors' => array(
+					'{{WRAPPER}} .bsc-brewery-info h3' => 'color: {{VALUE}};',
+				),
+			)
+		);
+
+		$this->add_group_control(
+			\Elementor\Group_Control_Typography::get_type(),
+			array(
+				'name' => 'title_typography',
+				'selector' => '{{WRAPPER}} .bsc-brewery-info h3',
+			)
+		);
+
+		$this->end_controls_section();
+
+		$this->start_controls_section(
+			'section_style_rating',
+			array(
+				'label' => __( 'Note', 'bsc-brew-manager' ),
+				'tab' => \Elementor\Controls_Manager::TAB_STYLE,
+			)
+		);
+
+		$this->add_control(
+			'rating_color',
+			array(
+				'label' => __( 'Couleur', 'bsc-brew-manager' ),
+				'type' => \Elementor\Controls_Manager::COLOR,
+				'selectors' => array(
+					'{{WRAPPER}} .bsc-rating' => 'color: {{VALUE}};',
+				),
+			)
+		);
+
+		$this->end_controls_section();
 	}
 
 	protected function render() {

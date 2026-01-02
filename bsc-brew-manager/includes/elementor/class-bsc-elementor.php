@@ -22,6 +22,9 @@ class BSC_Elementor_Manager {
 		require_once( __DIR__ . '/widgets/widget-brewery-info.php' );
 		require_once( __DIR__ . '/widgets/widget-beer-info.php' );
 		require_once( __DIR__ . '/widgets/widget-filter.php' );
+		require_once( __DIR__ . '/widgets/widget-form-brewery.php' );
+		require_once( __DIR__ . '/widgets/widget-form-beer.php' );
+		require_once( __DIR__ . '/widgets/widget-user-dashboard.php' );
 
 		// Register Widgets if classes exist
 		if ( class_exists( 'BSC_Elementor_Brewery_Info_Widget' ) ) {
@@ -34,6 +37,18 @@ class BSC_Elementor_Manager {
 
 		if ( class_exists( 'BSC_Elementor_Filter_Widget' ) ) {
 			$widgets_manager->register( new \BSC_Elementor_Filter_Widget() );
+		}
+
+		if ( class_exists( 'BSC_Elementor_Form_Brewery_Widget' ) ) {
+			$widgets_manager->register( new \BSC_Elementor_Form_Brewery_Widget() );
+		}
+
+		if ( class_exists( 'BSC_Elementor_Form_Beer_Widget' ) ) {
+			$widgets_manager->register( new \BSC_Elementor_Form_Beer_Widget() );
+		}
+
+		if ( class_exists( 'BSC_Elementor_Dashboard_Widget' ) ) {
+			$widgets_manager->register( new \BSC_Elementor_Dashboard_Widget() );
 		}
 	}
 }

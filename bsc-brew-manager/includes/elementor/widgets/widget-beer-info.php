@@ -44,6 +44,28 @@ class BSC_Elementor_Beer_Info_Widget extends \Elementor\Widget_Base {
 		);
 
 		$this->end_controls_section();
+
+		// Style
+		$this->start_controls_section(
+			'section_style_title',
+			array(
+				'label' => __( 'Titre', 'bsc-brew-manager' ),
+				'tab' => \Elementor\Controls_Manager::TAB_STYLE,
+			)
+		);
+
+		$this->add_control(
+			'title_color',
+			array(
+				'label' => __( 'Couleur', 'bsc-brew-manager' ),
+				'type' => \Elementor\Controls_Manager::COLOR,
+				'selectors' => array(
+					'{{WRAPPER}} .bsc-beer-info h3' => 'color: {{VALUE}};',
+				),
+			)
+		);
+
+		$this->end_controls_section();
 	}
 
 	protected function render() {
@@ -73,7 +95,6 @@ class BSC_Elementor_Beer_Info_Widget extends \Elementor\Widget_Base {
 		echo '<p>Style: ' . esc_html( $style ) . ' | ABV: ' . esc_html( $abv ) . '%</p>';
 		echo '<div class="bsc-rating">Note: ' . esc_html( $avg_rating ) . '/5</div>';
 
-		// Recipe (Ingredients etc) - Only show if user has permission or public? Prompt says "visible uniquement sur le site"
 		$ingredients = get_post_meta( $beer_id, 'bsc_ingredients_list', true );
 		if ( $ingredients ) {
 			echo '<div class="bsc-ingredients"><strong>Ingrédients:</strong><br>' . nl2br( esc_html( $ingredients ) ) . '</div>';

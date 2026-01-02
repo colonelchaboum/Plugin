@@ -49,6 +49,71 @@ class BSC_Elementor_Filter_Widget extends \Elementor\Widget_Base {
 		);
 
 		$this->end_controls_section();
+
+		// Style Tab
+		$this->start_controls_section(
+			'section_style_fields',
+			array(
+				'label' => __( 'Champs', 'bsc-brew-manager' ),
+				'tab' => \Elementor\Controls_Manager::TAB_STYLE,
+			)
+		);
+
+		$this->add_control(
+			'field_bg_color',
+			array(
+				'label' => __( 'Fond', 'bsc-brew-manager' ),
+				'type' => \Elementor\Controls_Manager::COLOR,
+				'selectors' => array(
+					'{{WRAPPER}} select' => 'background-color: {{VALUE}};',
+				),
+			)
+		);
+
+		$this->add_control(
+			'field_text_color',
+			array(
+				'label' => __( 'Texte', 'bsc-brew-manager' ),
+				'type' => \Elementor\Controls_Manager::COLOR,
+				'selectors' => array(
+					'{{WRAPPER}} select' => 'color: {{VALUE}};',
+				),
+			)
+		);
+
+		$this->end_controls_section();
+
+		$this->start_controls_section(
+			'section_style_button',
+			array(
+				'label' => __( 'Bouton', 'bsc-brew-manager' ),
+				'tab' => \Elementor\Controls_Manager::TAB_STYLE,
+			)
+		);
+
+		$this->add_control(
+			'button_bg_color',
+			array(
+				'label' => __( 'Fond', 'bsc-brew-manager' ),
+				'type' => \Elementor\Controls_Manager::COLOR,
+				'selectors' => array(
+					'{{WRAPPER}} button' => 'background-color: {{VALUE}};',
+				),
+			)
+		);
+
+		$this->add_control(
+			'button_text_color',
+			array(
+				'label' => __( 'Texte', 'bsc-brew-manager' ),
+				'type' => \Elementor\Controls_Manager::COLOR,
+				'selectors' => array(
+					'{{WRAPPER}} button' => 'color: {{VALUE}};',
+				),
+			)
+		);
+
+		$this->end_controls_section();
 	}
 
 	protected function render() {
