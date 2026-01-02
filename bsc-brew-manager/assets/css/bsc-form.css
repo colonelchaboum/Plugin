@@ -1,105 +1,134 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap');
+
 .bsc-recipe-builder {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
-    max-width: 800px;
+    font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+    max-width: 900px;
     margin: 0 auto;
+    color: #333;
 }
 
 #bsc-recipe-builder-container {
-    padding-left: 30px; /* Space for the timeline line */
     position: relative;
-    border-left: 4px solid #f0f0f1;
-    margin-left: 20px;
+    padding-top: 20px;
 }
 
+/* Timeline Structure */
+.bsc-step-wrapper {
+    display: flex;
+    margin-bottom: 30px;
+    position: relative;
+}
+
+.bsc-timeline-column {
+    width: 80px;
+    position: relative;
+    flex-shrink: 0;
+    margin-right: 15px;
+}
+
+.bsc-timeline-line {
+    position: absolute;
+    left: 50%;
+    top: 50px; /* Start below the icon */
+    bottom: -50px; /* Extend to next step */
+    width: 4px;
+    background: #e2e4e7;
+    transform: translateX(-50%);
+    z-index: 1;
+}
+
+.bsc-step-wrapper:last-child .bsc-timeline-line {
+    display: none;
+}
+
+.bsc-timeline-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: #fff;
+    border: 4px solid #fff;
+    position: relative;
+    z-index: 2;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 30px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    transition: transform 0.2s;
+}
+
+.bsc-timeline-icon:hover {
+    transform: translateX(-50%) scale(1.1);
+}
+
+/* Colors for Step Icons */
+.bsc-bg-mash { background-color: #3498db; color: white; }
+.bsc-bg-sparge { background-color: #5dade2; color: white; }
+.bsc-bg-boil { background-color: #e74c3c; color: white; }
+.bsc-bg-whirlpool { background-color: #e67e22; color: white; }
+.bsc-bg-chill { background-color: #00bcd4; color: white; }
+.bsc-bg-ferment { background-color: #9b59b6; color: white; }
+.bsc-bg-dryhop { background-color: #27ae60; color: white; }
+.bsc-bg-aging { background-color: #8d6e63; color: white; }
+.bsc-bg-package { background-color: #2ecc71; color: white; }
+.bsc-bg-carb { background-color: #95a5a6; color: white; }
+.bsc-bg-prep { background-color: #95a5a6; color: white; }
+
+
+/* Step Card */
 .bsc-step-card {
+    flex-grow: 1;
     background: #fff;
     border: 1px solid #e2e4e7;
-    border-radius: 8px;
-    padding: 20px;
-    margin-bottom: 30px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.05);
     position: relative;
-    transition: box-shadow 0.2s ease, border-color 0.2s ease;
-}
-
-/* Timeline Connector (Dot) */
-.bsc-step-card::before {
-    content: '';
-    position: absolute;
-    left: -38px; /* -30px padding + half border width approx */
-    top: 30px;
-    width: 16px;
-    height: 16px;
-    background: #fff;
-    border: 4px solid #dcdcde;
-    border-radius: 50%;
-    z-index: 2;
+    transition: all 0.3s ease;
 }
 
 .bsc-step-card:hover {
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
-
-/* Step Type Styling */
-.bsc-type-mash { border-left: 5px solid #3498db; }
-.bsc-type-mash::before { border-color: #3498db; }
-
-.bsc-type-boil { border-left: 5px solid #e74c3c; }
-.bsc-type-boil::before { border-color: #e74c3c; }
-
-.bsc-type-ferment { border-left: 5px solid #9b59b6; }
-.bsc-type-ferment::before { border-color: #9b59b6; }
-
-.bsc-type-package { border-left: 5px solid #2ecc71; }
-.bsc-type-package::before { border-color: #2ecc71; }
-
-.bsc-type-prep { border-left: 5px solid #95a5a6; }
-.bsc-type-prep::before { border-color: #95a5a6; }
-
-/* Step Icon */
-.bsc-step-icon {
-    position: absolute;
-    right: 20px;
-    top: -15px;
-    background: #fff;
-    padding: 5px;
-    border-radius: 50%;
-    font-size: 24px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    border: 1px solid #eee;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    border-color: #dcdcde;
 }
 
 /* Header Structure */
 .bsc-step-header {
-    margin-bottom: 15px;
-    padding-bottom: 10px;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
     border-bottom: 1px solid #f0f0f1;
 }
 
 .bsc-header-row {
     display: flex;
     align-items: center;
-    gap: 10px;
-    margin-bottom: 10px;
+    gap: 15px;
+    margin-bottom: 15px;
 }
 
 .bsc-step-type-select {
-    font-weight: bold;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
     color: #444;
     border: 1px solid #dcdcde;
-    border-radius: 4px;
-    padding: 5px;
+    border-radius: 6px;
+    padding: 8px 12px;
     background: #f9f9f9;
+    font-size: 0.9em;
 }
 
 .bsc-step-title-input {
-    font-size: 1.3em;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.4em;
     font-weight: 700;
     border: none;
     border-bottom: 2px solid transparent;
     padding: 5px;
     flex-grow: 1;
     background: transparent;
+    color: #2c3e50;
 }
 
 .bsc-step-title-input:focus {
@@ -112,8 +141,8 @@
     display: flex;
     gap: 20px;
     background: #f8f9fa;
-    padding: 10px;
-    border-radius: 6px;
+    padding: 12px 20px;
+    border-radius: 8px;
     border: 1px solid #eee;
 }
 
@@ -124,11 +153,12 @@
 }
 
 .bsc-metric-label {
-    font-size: 0.75em;
+    font-size: 0.7em;
     text-transform: uppercase;
-    color: #646970;
+    color: #7f8c8d;
+    font-weight: 600;
     letter-spacing: 0.5px;
-    margin-bottom: 3px;
+    margin-bottom: 4px;
 }
 
 .bsc-metric-input-wrapper {
@@ -138,14 +168,16 @@
 }
 
 .bsc-metric-input {
+    font-family: 'Montserrat', sans-serif;
     font-size: 1.2em;
     font-weight: bold;
     color: #2c3e50;
-    width: 60px;
+    width: 70px;
     text-align: center;
     border: 1px solid #dcdcde;
     border-radius: 4px;
-    padding: 4px;
+    padding: 6px;
+    background: #fff;
 }
 
 .bsc-metric-unit {
@@ -156,19 +188,18 @@
 /* Items Container */
 .bsc-items-container {
     background: #fff;
-    border-radius: 6px;
-    padding: 5px;
+    border-radius: 8px;
 }
 
 .bsc-item-row {
     display: grid;
-    grid-template-columns: 40px 120px 2fr 1fr 40px;
-    gap: 10px;
+    grid-template-columns: 50px 140px 2fr 1fr 40px; /* Adjusted col widths */
+    gap: 15px;
     align-items: center;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
     background: #fdfdfd;
-    padding: 8px;
-    border-radius: 4px;
+    padding: 10px;
+    border-radius: 8px;
     border: 1px solid #eee;
     transition: background 0.2s;
 }
@@ -181,50 +212,55 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
     background: #fff;
-    border: 1px solid #eee;
+    border: 1px solid #e0e0e0;
     border-radius: 50%;
-    font-size: 18px;
+    font-size: 20px;
     color: #555;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
 .bsc-item-select, .bsc-item-input {
-    padding: 6px;
+    padding: 8px;
     border: 1px solid #dcdcde;
     border-radius: 4px;
     width: 100%;
+    font-family: 'Montserrat', sans-serif;
 }
 
 .bsc-btn-icon {
     background: none;
     border: none;
     cursor: pointer;
-    color: #d63638;
+    color: #e74c3c;
     font-size: 1.2em;
     display: flex;
     align-items: center;
     justify-content: center;
-    opacity: 0.6;
+    opacity: 0.7;
+    transition: opacity 0.2s;
 }
 
 .bsc-btn-icon:hover {
     opacity: 1;
-    color: #b32d2e;
 }
 
 .bsc-btn-add-item {
     background-color: transparent;
     color: #2271b1;
     border: 1px dashed #2271b1;
-    border-radius: 4px;
-    padding: 8px;
+    border-radius: 8px;
+    padding: 10px;
     width: 100%;
     cursor: pointer;
-    margin-top: 10px;
+    margin-top: 15px;
     transition: all 0.2s;
-    font-weight: 500;
+    font-weight: 600;
+    font-family: 'Montserrat', sans-serif;
+    text-transform: uppercase;
+    font-size: 0.9em;
 }
 
 .bsc-btn-add-item:hover {
@@ -232,45 +268,48 @@
     border-style: solid;
 }
 
-/* Add Step Button Wrapper to align with timeline */
+/* Add Step Button Wrapper */
 .bsc-add-step-wrapper {
     text-align: center;
-    padding-top: 10px;
-    margin-bottom: 40px;
+    padding-top: 20px;
+    margin-bottom: 50px;
+    margin-left: 80px; /* Align with content column, offset by timeline col */
 }
 
 .bsc-btn-add-step {
-    background-color: #2271b1;
+    background-color: #2c3e50;
     color: white;
     border: none;
-    border-radius: 20px;
-    padding: 12px 30px;
+    border-radius: 30px;
+    padding: 15px 40px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
     font-size: 1.1em;
     cursor: pointer;
-    box-shadow: 0 2px 4px rgba(34, 113, 177, 0.3);
-    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 10px rgba(44, 62, 80, 0.3);
+    transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
 }
 
 .bsc-btn-add-step:hover {
-    background-color: #135e96;
+    background-color: #1a252f;
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(34, 113, 177, 0.4);
+    box-shadow: 0 6px 15px rgba(44, 62, 80, 0.4);
 }
 
 .bsc-remove-step {
     position: absolute;
-    top: 10px;
-    right: 10px;
+    top: 15px;
+    right: 15px;
     color: #ccc;
     background: none;
     border: none;
     cursor: pointer;
-    font-size: 1.5em;
+    font-size: 1.8em;
     line-height: 1;
     transition: color 0.2s;
     z-index: 10;
 }
 
 .bsc-remove-step:hover {
-    color: #d63638;
+    color: #e74c3c;
 }

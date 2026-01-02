@@ -162,7 +162,7 @@ class BSC_Frontend_Display {
 		$post_id = get_the_ID();
 
 		// Enqueue our CSS
-		wp_enqueue_style( 'bsc-form-css', BSC_BREW_MANAGER_URL . 'assets/css/bsc-form.css', array(), '1.1' );
+		wp_enqueue_style( 'bsc-form-css', BSC_BREW_MANAGER_URL . 'assets/css/bsc-form.css', array(), '1.2' );
 
 		// Retrieve Meta
 		$meta_fields = array(
@@ -200,80 +200,95 @@ class BSC_Frontend_Display {
 							$icon = '⚙️';
 							switch($type) {
 								case 'mash': $icon = '🌾'; break;
+								case 'sparge': $icon = '🚿'; break;
 								case 'boil': $icon = '🔥'; break;
-								case 'ferment': $icon = '⚗️'; break;
+								case 'whirlpool': $icon = '🌀'; break;
+								case 'chill': $icon = '❄️'; break;
+								case 'ferment': $icon = '🦠'; break;
+								case 'dryhop': $icon = '🌿'; break;
+								case 'aging': $icon = '🕰️'; break;
 								case 'package': $icon = '📦'; break;
+								case 'carb': $icon = '🫧'; break;
 							}
 						?>
-							<div class="bsc-step-card bsc-type-<?php echo esc_attr($type); ?>">
-								<!-- Visual Connector -->
-								<div class="bsc-timeline-connector"></div>
-								<div class="bsc-step-icon"><?php echo $icon; ?></div>
-
-								<div class="bsc-step-header">
-									<div class="bsc-header-row">
-										<span class="bsc-step-type-select" style="border:none; background:transparent;">
-											<?php
-												// Map type to label
-												$labels = [
-													'prep' => 'Préparation',
-													'mash' => 'Empâtage',
-													'boil' => 'Ébullition',
-													'ferment' => 'Fermentation',
-													'package' => 'Conditionnement'
-												];
-												echo isset($labels[$type]) ? $labels[$type] : 'Étape';
-											?>
-										</span>
-										<strong class="bsc-step-title-input"><?php echo esc_html( $step['title'] ); ?></strong>
-									</div>
-
-									<div class="bsc-step-metrics">
-										<?php if ( ! empty( $step['duration'] ) ) : ?>
-										<div class="bsc-metric">
-											<span class="bsc-metric-label">Durée</span>
-											<div class="bsc-metric-input-wrapper">
-												<span class="bsc-metric-input"><?php echo esc_html( $step['duration'] ); ?></span>
-												<span class="bsc-metric-unit">min</span>
-											</div>
-										</div>
-										<?php endif; ?>
-
-										<?php if ( ! empty( $step['temp'] ) ) : ?>
-										<div class="bsc-metric">
-											<span class="bsc-metric-label">Temp</span>
-											<div class="bsc-metric-input-wrapper">
-												<span class="bsc-metric-input"><?php echo esc_html( $step['temp'] ); ?></span>
-												<span class="bsc-metric-unit">°C</span>
-											</div>
-										</div>
-										<?php endif; ?>
-									</div>
+							<div class="bsc-step-wrapper">
+								<div class="bsc-timeline-column">
+									<div class="bsc-timeline-line"></div>
+									<div class="bsc-timeline-icon bsc-bg-<?php echo esc_attr($type); ?>"><?php echo $icon; ?></div>
 								</div>
 
-								<div class="bsc-items-container">
-									<?php if ( ! empty( $step['items'] ) ) : ?>
-										<?php foreach ( $step['items'] as $item ) :
-											$i_icon = '🔹';
-											switch($item['type']) {
-												case 'Malt': $i_icon = '🌾'; break;
-												case 'Hop': $i_icon = '🌿'; break;
-												case 'Yeast': $i_icon = '🦠'; break;
-												case 'Adjunct': $i_icon = '🍬'; break;
-												case 'Technique': $i_icon = '🛠️'; break;
-												case 'Equipment': $i_icon = '⚙️'; break;
-											}
-										?>
-											<div class="bsc-item-row" style="grid-template-columns: 40px 100px 1fr 1fr;">
-												<div class="bsc-item-icon"><?php echo $i_icon; ?></div>
-												<span class="bsc-item-select" style="border:none; background:#f9f9f9;"><?php echo esc_html( $item['type'] ); ?></span>
-												<span class="bsc-item-input" style="border:none; font-weight:bold;"><?php echo esc_html( $item['name'] ); ?></span>
-												<span class="bsc-item-input" style="border:none;"><?php echo esc_html( $item['qty'] ); ?></span>
+								<div class="bsc-step-card bsc-type-<?php echo esc_attr($type); ?>">
+									<div class="bsc-step-header">
+										<div class="bsc-header-row">
+											<span class="bsc-step-type-select" style="border:none; background:transparent;">
+												<?php
+													// Map type to label
+													$labels = [
+														'prep' => 'Préparation',
+														'mash' => 'Empâtage',
+														'sparge' => 'Rinçage',
+														'boil' => 'Ébullition',
+														'whirlpool' => 'Whirlpool',
+														'chill' => 'Refroidissement',
+														'ferment' => 'Fermentation',
+														'dryhop' => 'Dry Hop',
+														'aging' => 'Garde',
+														'package' => 'Conditionnement',
+														'carb' => 'Carbonatation'
+													];
+													echo isset($labels[$type]) ? $labels[$type] : 'Étape';
+												?>
+											</span>
+											<strong class="bsc-step-title-input"><?php echo esc_html( $step['title'] ); ?></strong>
+										</div>
+
+										<div class="bsc-step-metrics">
+											<?php if ( ! empty( $step['duration'] ) ) : ?>
+											<div class="bsc-metric">
+												<span class="bsc-metric-label">Durée</span>
+												<div class="bsc-metric-input-wrapper">
+													<span class="bsc-metric-input"><?php echo esc_html( $step['duration'] ); ?></span>
+													<span class="bsc-metric-unit">min</span>
+												</div>
 											</div>
-										<?php endforeach; ?>
-									<?php else : ?>
-										<p style="color:#999; font-style:italic; padding:10px;"><?php _e('Aucun ingrédient/équipement.', 'bsc-brew-manager'); ?></p>
-									<?php endif; ?>
+											<?php endif; ?>
+
+											<?php if ( ! empty( $step['temp'] ) ) : ?>
+											<div class="bsc-metric">
+												<span class="bsc-metric-label">Temp</span>
+												<div class="bsc-metric-input-wrapper">
+													<span class="bsc-metric-input"><?php echo esc_html( $step['temp'] ); ?></span>
+													<span class="bsc-metric-unit">°C</span>
+												</div>
+											</div>
+											<?php endif; ?>
+										</div>
+									</div>
+
+									<div class="bsc-items-container">
+										<?php if ( ! empty( $step['items'] ) ) : ?>
+											<?php foreach ( $step['items'] as $item ) :
+												$i_icon = '🔹';
+												switch($item['type']) {
+													case 'Malt': $i_icon = '🌾'; break;
+													case 'Hop': $i_icon = '🌿'; break;
+													case 'Yeast': $i_icon = '🦠'; break;
+													case 'Adjunct': $i_icon = '🍬'; break;
+													case 'Technique': $i_icon = '🛠️'; break;
+													case 'Equipment': $i_icon = '⚙️'; break;
+												}
+											?>
+												<div class="bsc-item-row" style="grid-template-columns: 50px 140px 2fr 1fr 40px;">
+													<div class="bsc-item-icon"><?php echo $i_icon; ?></div>
+													<span class="bsc-item-select" style="border:none; background:#f9f9f9;"><?php echo esc_html( $item['type'] ); ?></span>
+													<span class="bsc-item-input" style="border:none; font-weight:bold;"><?php echo esc_html( $item['name'] ); ?></span>
+													<span class="bsc-item-input" style="border:none;"><?php echo esc_html( $item['qty'] ); ?></span>
+												</div>
+											<?php endforeach; ?>
+										<?php else : ?>
+											<p style="color:#999; font-style:italic; padding:10px;"><?php _e('Aucun ingrédient/équipement.', 'bsc-brew-manager'); ?></p>
+										<?php endif; ?>
+									</div>
 								</div>
 							</div>
 						<?php endforeach; ?>

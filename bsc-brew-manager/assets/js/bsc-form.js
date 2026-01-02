@@ -29,60 +29,70 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             const stepHtml = `
-                <div class="bsc-step-card bsc-type-${step.type}" data-index="${index}">
-                    <div class="bsc-timeline-connector"></div>
-                    <div class="bsc-step-icon">${getIcon(step.type)}</div>
-
-                    <button type="button" class="bsc-remove-step" onclick="bscRemoveStep(${index})">&times;</button>
-
-                    <div class="bsc-step-header">
-                        <div class="bsc-header-row">
-                            <select class="bsc-step-type-select" onchange="bscUpdateStep(${index}, 'type', this.value)">
-                                <option value="prep" ${step.type === 'prep' ? 'selected' : ''}>Préparation</option>
-                                <option value="mash" ${step.type === 'mash' ? 'selected' : ''}>Empâtage</option>
-                                <option value="boil" ${step.type === 'boil' ? 'selected' : ''}>Ébullition</option>
-                                <option value="ferment" ${step.type === 'ferment' ? 'selected' : ''}>Fermentation</option>
-                                <option value="package" ${step.type === 'package' ? 'selected' : ''}>Conditionnement</option>
-                            </select>
-                            <input type="text" class="bsc-step-title-input" value="${esc(step.title)}" placeholder="Titre de l'étape" onchange="bscUpdateStep(${index}, 'title', this.value)">
-                        </div>
-
-                        <div class="bsc-step-metrics">
-                            <div class="bsc-metric">
-                                <span class="bsc-metric-label">Durée</span>
-                                <div class="bsc-metric-input-wrapper">
-                                    <input type="number" class="bsc-metric-input" value="${esc(step.duration)}" onchange="bscUpdateStep(${index}, 'duration', this.value)">
-                                    <span class="bsc-metric-unit">min</span>
-                                </div>
-                            </div>
-                            <div class="bsc-metric">
-                                <span class="bsc-metric-label">Temp</span>
-                                <div class="bsc-metric-input-wrapper">
-                                    <input type="text" class="bsc-metric-input" value="${esc(step.temp)}" onchange="bscUpdateStep(${index}, 'temp', this.value)">
-                                    <span class="bsc-metric-unit">°C</span>
-                                </div>
-                            </div>
-                        </div>
+                <div class="bsc-step-wrapper" data-index="${index}">
+                    <div class="bsc-timeline-column">
+                        <div class="bsc-timeline-line"></div>
+                        <div class="bsc-timeline-icon bsc-bg-${step.type}">${getIcon(step.type)}</div>
                     </div>
 
-                    <div class="bsc-items-container">
-                        ${step.items.map((item, itemIndex) => `
-                            <div class="bsc-item-row">
-                                <div class="bsc-item-icon">${getIngredientIcon(item.type)}</div>
-                                <select class="bsc-item-select" onchange="bscUpdateItem(${index}, ${itemIndex}, 'type', this.value)">
-                                    <option value="Malt" ${item.type === 'Malt' ? 'selected' : ''}>Malt</option>
-                                    <option value="Hop" ${item.type === 'Hop' ? 'selected' : ''}>Houblon</option>
-                                    <option value="Yeast" ${item.type === 'Yeast' ? 'selected' : ''}>Levure</option>
-                                    <option value="Adjunct" ${item.type === 'Adjunct' ? 'selected' : ''}>Autre</option>
-                                    <option value="Technique" ${item.type === 'Technique' ? 'selected' : ''}>Technique</option>
-                                    <option value="Equipment" ${item.type === 'Equipment' ? 'selected' : ''}>Matériel</option>
+                    <div class="bsc-step-card bsc-type-${step.type}">
+                        <button type="button" class="bsc-remove-step" onclick="bscRemoveStep(${index})">&times;</button>
+
+                        <div class="bsc-step-header">
+                            <div class="bsc-header-row">
+                                <select class="bsc-step-type-select" onchange="bscUpdateStep(${index}, 'type', this.value)">
+                                    <option value="prep" ${step.type === 'prep' ? 'selected' : ''}>Préparation</option>
+                                    <option value="mash" ${step.type === 'mash' ? 'selected' : ''}>Empâtage</option>
+                                    <option value="sparge" ${step.type === 'sparge' ? 'selected' : ''}>Rinçage</option>
+                                    <option value="boil" ${step.type === 'boil' ? 'selected' : ''}>Ébullition</option>
+                                    <option value="whirlpool" ${step.type === 'whirlpool' ? 'selected' : ''}>Whirlpool</option>
+                                    <option value="chill" ${step.type === 'chill' ? 'selected' : ''}>Refroidissement</option>
+                                    <option value="ferment" ${step.type === 'ferment' ? 'selected' : ''}>Fermentation</option>
+                                    <option value="dryhop" ${step.type === 'dryhop' ? 'selected' : ''}>Dry Hop</option>
+                                    <option value="aging" ${step.type === 'aging' ? 'selected' : ''}>Garde</option>
+                                    <option value="package" ${step.type === 'package' ? 'selected' : ''}>Conditionnement</option>
+                                    <option value="carb" ${step.type === 'carb' ? 'selected' : ''}>Carbonatation</option>
                                 </select>
-                                <input type="text" class="bsc-item-input" value="${esc(item.name)}" placeholder="Nom" onchange="bscUpdateItem(${index}, ${itemIndex}, 'name', this.value)">
-                                <input type="text" class="bsc-item-input" value="${esc(item.qty)}" placeholder="Qté" onchange="bscUpdateItem(${index}, ${itemIndex}, 'qty', this.value)">
-                                <button type="button" class="bsc-btn-icon" onclick="bscRemoveItem(${index}, ${itemIndex})">&times;</button>
+                                <input type="text" class="bsc-step-title-input" value="${esc(step.title)}" placeholder="Titre de l'étape" onchange="bscUpdateStep(${index}, 'title', this.value)">
                             </div>
-                        `).join('')}
-                        <button type="button" class="bsc-btn-add-item" onclick="bscAddItem(${index})">+ Ajouter un élément</button>
+
+                            <div class="bsc-step-metrics">
+                                <div class="bsc-metric">
+                                    <span class="bsc-metric-label">Durée</span>
+                                    <div class="bsc-metric-input-wrapper">
+                                        <input type="number" class="bsc-metric-input" value="${esc(step.duration)}" onchange="bscUpdateStep(${index}, 'duration', this.value)">
+                                        <span class="bsc-metric-unit">min</span>
+                                    </div>
+                                </div>
+                                <div class="bsc-metric">
+                                    <span class="bsc-metric-label">Temp</span>
+                                    <div class="bsc-metric-input-wrapper">
+                                        <input type="text" class="bsc-metric-input" value="${esc(step.temp)}" onchange="bscUpdateStep(${index}, 'temp', this.value)">
+                                        <span class="bsc-metric-unit">°C</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bsc-items-container">
+                            ${step.items.map((item, itemIndex) => `
+                                <div class="bsc-item-row">
+                                    <div class="bsc-item-icon">${getIngredientIcon(item.type)}</div>
+                                    <select class="bsc-item-select" onchange="bscUpdateItem(${index}, ${itemIndex}, 'type', this.value)">
+                                        <option value="Malt" ${item.type === 'Malt' ? 'selected' : ''}>Malt</option>
+                                        <option value="Hop" ${item.type === 'Hop' ? 'selected' : ''}>Houblon</option>
+                                        <option value="Yeast" ${item.type === 'Yeast' ? 'selected' : ''}>Levure</option>
+                                        <option value="Adjunct" ${item.type === 'Adjunct' ? 'selected' : ''}>Autre</option>
+                                        <option value="Technique" ${item.type === 'Technique' ? 'selected' : ''}>Technique</option>
+                                        <option value="Equipment" ${item.type === 'Equipment' ? 'selected' : ''}>Matériel</option>
+                                    </select>
+                                    <input type="text" class="bsc-item-input" value="${esc(item.name)}" placeholder="Nom" onchange="bscUpdateItem(${index}, ${itemIndex}, 'name', this.value)">
+                                    <input type="text" class="bsc-item-input" value="${esc(item.qty)}" placeholder="Qté" onchange="bscUpdateItem(${index}, ${itemIndex}, 'qty', this.value)">
+                                    <button type="button" class="bsc-btn-icon" onclick="bscRemoveItem(${index}, ${itemIndex})">&times;</button>
+                                </div>
+                            `).join('')}
+                            <button type="button" class="bsc-btn-add-item" onclick="bscAddItem(${index})">+ Ajouter un élément</button>
+                        </div>
                     </div>
                 </div>
             `;
@@ -104,20 +114,32 @@ document.addEventListener('DOMContentLoaded', function() {
     function detectType(title) {
         if (!title) return 'prep';
         const t = title.toLowerCase();
-        if (t.includes('mash') || t.includes('empâtage') || t.includes('empatage')) return 'mash';
-        if (t.includes('boil') || t.includes('ébullition') || t.includes('ebullition')) return 'boil';
+        if (t.includes('mash') || t.includes('empatage') || t.includes('empâtage')) return 'mash';
+        if (t.includes('sparge') || t.includes('rincage') || t.includes('rinçage')) return 'sparge';
+        if (t.includes('boil') || t.includes('ebullition') || t.includes('ébullition')) return 'boil';
+        if (t.includes('whirlpool')) return 'whirlpool';
+        if (t.includes('chill') || t.includes('refroidissement')) return 'chill';
         if (t.includes('ferment')) return 'ferment';
-        if (t.includes('bottle') || t.includes('bouteille') || t.includes('fût') || t.includes('keg') || t.includes('package')) return 'package';
+        if (t.includes('dry') && t.includes('hop')) return 'dryhop';
+        if (t.includes('aging') || t.includes('garde')) return 'aging';
+        if (t.includes('package') || t.includes('conditionnement') || t.includes('bouteille') || t.includes('fût')) return 'package';
+        if (t.includes('carb') || t.includes('sucre')) return 'carb';
         return 'prep';
     }
 
     function getIcon(type) {
         switch(type) {
-            case 'mash': return '🌾'; // Ear of Rice (closest to grain)
-            case 'boil': return '🔥'; // Fire
-            case 'ferment': return '⚗️'; // Alembic (closest to fermentation/chemistry)
-            case 'package': return '📦'; // Package
-            case 'prep': default: return '⚙️'; // Gear
+            case 'mash': return '🌾';
+            case 'sparge': return '🚿';
+            case 'boil': return '🔥';
+            case 'whirlpool': return '🌀';
+            case 'chill': return '❄️';
+            case 'ferment': return '🦠';
+            case 'dryhop': return '🌿';
+            case 'aging': return '🕰️';
+            case 'package': return '📦';
+            case 'carb': return '🫧';
+            case 'prep': default: return '⚙️';
         }
     }
 
@@ -149,12 +171,11 @@ document.addEventListener('DOMContentLoaded', function() {
     window.bscUpdateStep = function(index, key, value) {
         steps[index][key] = value;
         // Auto-update type if title changes and type wasn't manually set?
-        // For now, let's keep it simple. If title changes, we don't force type change unless it's new.
         if (key === 'title' && steps[index].type === 'prep' && value) {
              const detected = detectType(value);
              if (detected !== 'prep') steps[index].type = detected;
         }
-        render(); // Re-render to update icon/styles
+        render();
     };
 
     window.bscAddItem = function(stepIndex) {
