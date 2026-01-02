@@ -162,7 +162,7 @@
 
 .bsc-item-row {
     display: grid;
-    grid-template-columns: 120px 2fr 1fr 40px;
+    grid-template-columns: 40px 120px 2fr 1fr 40px;
     gap: 10px;
     align-items: center;
     margin-bottom: 8px;
@@ -175,6 +175,19 @@
 
 .bsc-item-row:hover {
     background: #f8f9fa;
+}
+
+.bsc-item-icon {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 32px;
+    height: 32px;
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 50%;
+    font-size: 18px;
+    color: #555;
 }
 
 .bsc-item-select, .bsc-item-input {

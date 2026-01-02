@@ -68,6 +68,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="bsc-items-container">
                         ${step.items.map((item, itemIndex) => `
                             <div class="bsc-item-row">
+                                <div class="bsc-item-icon">${getIngredientIcon(item.type)}</div>
                                 <select class="bsc-item-select" onchange="bscUpdateItem(${index}, ${itemIndex}, 'type', this.value)">
                                     <option value="Malt" ${item.type === 'Malt' ? 'selected' : ''}>Malt</option>
                                     <option value="Hop" ${item.type === 'Hop' ? 'selected' : ''}>Houblon</option>
@@ -117,6 +118,18 @@ document.addEventListener('DOMContentLoaded', function() {
             case 'ferment': return '⚗️'; // Alembic (closest to fermentation/chemistry)
             case 'package': return '📦'; // Package
             case 'prep': default: return '⚙️'; // Gear
+        }
+    }
+
+    function getIngredientIcon(type) {
+        switch(type) {
+            case 'Malt': return '🌾';
+            case 'Hop': return '🌿';
+            case 'Yeast': return '🦠';
+            case 'Adjunct': return '🍬';
+            case 'Technique': return '🛠️';
+            case 'Equipment': return '⚙️';
+            default: return '🔹';
         }
     }
 

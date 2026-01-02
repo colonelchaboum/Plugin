@@ -253,8 +253,19 @@ class BSC_Frontend_Display {
 
 								<div class="bsc-items-container">
 									<?php if ( ! empty( $step['items'] ) ) : ?>
-										<?php foreach ( $step['items'] as $item ) : ?>
-											<div class="bsc-item-row" style="grid-template-columns: 100px 1fr 1fr;">
+										<?php foreach ( $step['items'] as $item ) :
+											$i_icon = '🔹';
+											switch($item['type']) {
+												case 'Malt': $i_icon = '🌾'; break;
+												case 'Hop': $i_icon = '🌿'; break;
+												case 'Yeast': $i_icon = '🦠'; break;
+												case 'Adjunct': $i_icon = '🍬'; break;
+												case 'Technique': $i_icon = '🛠️'; break;
+												case 'Equipment': $i_icon = '⚙️'; break;
+											}
+										?>
+											<div class="bsc-item-row" style="grid-template-columns: 40px 100px 1fr 1fr;">
+												<div class="bsc-item-icon"><?php echo $i_icon; ?></div>
 												<span class="bsc-item-select" style="border:none; background:#f9f9f9;"><?php echo esc_html( $item['type'] ); ?></span>
 												<span class="bsc-item-input" style="border:none; font-weight:bold;"><?php echo esc_html( $item['name'] ); ?></span>
 												<span class="bsc-item-input" style="border:none;"><?php echo esc_html( $item['qty'] ); ?></span>
