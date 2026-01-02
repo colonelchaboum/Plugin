@@ -11,6 +11,12 @@ class BSC_Form_Handler {
 		add_shortcode( 'bsc_add_brewery', array( $this, 'render_brewery_form' ) );
 		add_action( 'init', array( $this, 'handle_recipe_submission' ) );
 		add_action( 'init', array( $this, 'handle_brewery_submission' ) );
+		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_assets' ) );
+	}
+
+	public function enqueue_assets() {
+		wp_register_style( 'bsc-form-css', BSC_BREW_MANAGER_URL . 'assets/css/bsc-form.css', array(), '1.0' );
+		wp_register_script( 'bsc-form-js', BSC_BREW_MANAGER_URL . 'assets/js/bsc-form.js', array(), '1.0', true );
 	}
 
 	public function render_brewery_form() {
@@ -176,6 +182,9 @@ class BSC_Form_Handler {
 			return '<p>' . __( 'Vous devez être connecté pour gérer une bière.', 'bsc-brew-manager' ) . '</p>';
 		}
 
+		wp_enqueue_style( 'bsc-form-css' );
+		wp_enqueue_script( 'bsc-form-js' );
+
 		$post_id = 0;
 		$title = '';
 		$content = '';
@@ -197,6 +206,15 @@ class BSC_Form_Handler {
 			return isset( $meta[$key][0] ) ? $meta[$key][0] : '';
 		};
 
+		// Parse Steps JSON
+		$steps_json = $get_meta('bsc_recipe_steps');
+		$steps_data = $steps_json ? json_decode($steps_json, true) : null;
+
+		// Pass data to JS
+		wp_localize_script( 'bsc-form-js', 'bscRecipeData', array(
+			'steps' => $steps_data
+		) );
+
 		$user_id = get_current_user_id();
 		$breweries = get_posts( array(
 			'post_type' => 'bsc_brewery',
@@ -213,123 +231,117 @@ class BSC_Form_Handler {
 
 		ob_start();
 		?>
-		<div class="bsc-recipe-form">
+		<div class="bsc-recipe-form bsc-recipe-builder">
 			<form method="post" enctype="multipart/form-data">
 				<?php wp_nonce_field( 'bsc_add_recipe_action', 'bsc_add_recipe_nonce' ); ?>
 				<?php if ( $post_id ) : ?>
 					<input type="hidden" name="bsc_post_id" value="<?php echo esc_attr( $post_id ); ?>">
 				<?php endif; ?>
 
-				<p>
-					<label for="bsc_brewery_id"><?php _e( 'Brasserie', 'bsc-brew-manager' ); ?></label>
-					<select name="bsc_brewery_id" id="bsc_brewery_id" required class="widefat">
-						<?php
-						$current_brewery = $get_meta('bsc_brewery_id');
-						if ( ! $current_brewery && $preselected_brewery_id ) {
-							$current_brewery = $preselected_brewery_id;
-						}
-						foreach ( $breweries as $brewery ) : ?>
-							<option value="<?php echo esc_attr( $brewery->ID ); ?>" <?php selected( $current_brewery, $brewery->ID ); ?>><?php echo esc_html( $brewery->post_title ); ?></option>
-						<?php endforeach; ?>
-					</select>
-				</p>
+				<!-- General Info Section -->
+				<div class="bsc-step-card">
+					<div class="bsc-step-header"><h3><?php _e('Informations Générales', 'bsc-brew-manager'); ?></h3></div>
 
-				<p>
-					<label for="bsc_title"><?php _e( 'Nom de la Bière', 'bsc-brew-manager' ); ?></label>
-					<input type="text" name="bsc_title" id="bsc_title" value="<?php echo esc_attr( $title ); ?>" required class="widefat">
-				</p>
+					<p>
+						<label for="bsc_brewery_id"><?php _e( 'Brasserie', 'bsc-brew-manager' ); ?></label>
+						<select name="bsc_brewery_id" id="bsc_brewery_id" required class="bsc-item-select">
+							<?php
+							$current_brewery = $get_meta('bsc_brewery_id');
+							if ( ! $current_brewery && $preselected_brewery_id ) {
+								$current_brewery = $preselected_brewery_id;
+							}
+							foreach ( $breweries as $brewery ) : ?>
+								<option value="<?php echo esc_attr( $brewery->ID ); ?>" <?php selected( $current_brewery, $brewery->ID ); ?>><?php echo esc_html( $brewery->post_title ); ?></option>
+							<?php endforeach; ?>
+						</select>
+					</p>
 
-				<p>
-					<label for="bsc_style"><?php _e( 'Style', 'bsc-brew-manager' ); ?></label>
-					<select name="bsc_style" id="bsc_style" class="widefat">
-						<?php
-						$styles = array( 'IPA', 'Stout', 'Lager', 'Pale Ale', 'Porter', 'Saison', 'Sour', 'Wheat Beer', 'Belgian', 'Other' );
-						$current_style = $get_meta('bsc_style');
-						foreach ( $styles as $style ) {
-							echo '<option value="' . esc_attr( $style ) . '" ' . selected( $current_style, $style, false ) . '>' . esc_html( $style ) . '</option>';
-						}
-						?>
-					</select>
-				</p>
+					<p>
+						<label for="bsc_title"><?php _e( 'Nom de la Bière', 'bsc-brew-manager' ); ?></label>
+						<input type="text" name="bsc_title" id="bsc_title" value="<?php echo esc_attr( $title ); ?>" required class="bsc-item-input">
+					</p>
 
-				<p>
-					<label for="bsc_description"><?php _e( 'Description / Histoire', 'bsc-brew-manager' ); ?></label>
-					<?php wp_editor( $content, 'bsc_description', array( 'media_buttons' => false, 'textarea_rows' => 5 ) ); ?>
-				</p>
+					<div class="bsc-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+						<p>
+							<label for="bsc_style"><?php _e( 'Style', 'bsc-brew-manager' ); ?></label>
+							<select name="bsc_style" id="bsc_style" class="bsc-item-select">
+								<?php
+								$styles = array( 'IPA', 'Stout', 'Lager', 'Pale Ale', 'Porter', 'Saison', 'Sour', 'Wheat Beer', 'Belgian', 'Other' );
+								$current_style = $get_meta('bsc_style');
+								foreach ( $styles as $style ) {
+									echo '<option value="' . esc_attr( $style ) . '" ' . selected( $current_style, $style, false ) . '>' . esc_html( $style ) . '</option>';
+								}
+								?>
+							</select>
+						</p>
+						<p>
+							<label><?php _e( 'Volume (L)', 'bsc-brew-manager' ); ?></label>
+							<input type="number" step="0.1" name="bsc_batch_volume" value="<?php echo esc_attr( $get_meta('bsc_batch_volume') ); ?>" class="bsc-item-input">
+						</p>
+					</div>
 
-				<h3><?php _e( 'Détails techniques', 'bsc-brew-manager' ); ?></h3>
+					<div class="bsc-grid" style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap:10px;">
+						<p>
+							<label><?php _e( 'ABV (%)', 'bsc-brew-manager' ); ?></label>
+							<input type="number" step="0.1" name="bsc_abv" value="<?php echo esc_attr( $get_meta('bsc_abv') ); ?>" class="bsc-item-input">
+						</p>
+						<p>
+							<label><?php _e( 'IBU', 'bsc-brew-manager' ); ?></label>
+							<input type="number" name="bsc_ibu" value="<?php echo esc_attr( $get_meta('bsc_ibu') ); ?>" class="bsc-item-input">
+						</p>
+						<p>
+							<label><?php _e( 'EBC', 'bsc-brew-manager' ); ?></label>
+							<input type="text" name="bsc_color" value="<?php echo esc_attr( $get_meta('bsc_color') ); ?>" class="bsc-item-input">
+						</p>
+						<p>
+							<label><?php _e( 'Ébullition (min)', 'bsc-brew-manager' ); ?></label>
+							<input type="number" name="bsc_boil_time" value="<?php echo esc_attr( $get_meta('bsc_boil_time') ); ?>" class="bsc-item-input">
+						</p>
+					</div>
 
-				<div class="bsc-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
 					<p>
-						<label><?php _e( 'Volume (L)', 'bsc-brew-manager' ); ?></label>
-						<input type="number" step="0.1" name="bsc_batch_volume" value="<?php echo esc_attr( $get_meta('bsc_batch_volume') ); ?>">
-					</p>
-					<p>
-						<label><?php _e( 'ABV (%)', 'bsc-brew-manager' ); ?></label>
-						<input type="number" step="0.1" name="bsc_abv" value="<?php echo esc_attr( $get_meta('bsc_abv') ); ?>">
-					</p>
-					<p>
-						<label><?php _e( 'IBU', 'bsc-brew-manager' ); ?></label>
-						<input type="number" name="bsc_ibu" value="<?php echo esc_attr( $get_meta('bsc_ibu') ); ?>">
-					</p>
-					<p>
-						<label><?php _e( 'Couleur (EBC)', 'bsc-brew-manager' ); ?></label>
-						<input type="text" name="bsc_color" value="<?php echo esc_attr( $get_meta('bsc_color') ); ?>">
-					</p>
-					<p>
-						<label><?php _e( 'Temps d\'ébullition (min)', 'bsc-brew-manager' ); ?></label>
-						<input type="number" name="bsc_boil_time" value="<?php echo esc_attr( $get_meta('bsc_boil_time') ); ?>">
-					</p>
-					<p>
-						<label><?php _e( 'Temp. Fermentation (°C)', 'bsc-brew-manager' ); ?></label>
-						<input type="text" name="bsc_fermentation_temp" value="<?php echo esc_attr( $get_meta('bsc_fermentation_temp') ); ?>">
+						<label for="bsc_description"><?php _e( 'Description / Histoire', 'bsc-brew-manager' ); ?></label>
+						<textarea name="bsc_description" rows="3" class="bsc-item-input"><?php echo esc_textarea( $content ); ?></textarea>
 					</p>
 				</div>
 
-				<p>
-					<label><?php _e( 'Houblons (Hops)', 'bsc-brew-manager' ); ?></label>
-					<textarea name="bsc_hops" rows="3" class="widefat" placeholder="<?php _e('Citra, Mosaic...', 'bsc-brew-manager'); ?>"><?php echo esc_textarea( $get_meta('bsc_hops') ); ?></textarea>
-				</p>
-				<p>
-					<label><?php _e( 'Malts', 'bsc-brew-manager' ); ?></label>
-					<textarea name="bsc_malts" rows="3" class="widefat" placeholder="<?php _e('Pilsner, Munich...', 'bsc-brew-manager'); ?>"><?php echo esc_textarea( $get_meta('bsc_malts') ); ?></textarea>
-				</p>
+				<!-- Dynamic Steps Container -->
+				<h3><?php _e('Étapes de Brassage', 'bsc-brew-manager'); ?></h3>
+				<div id="bsc-recipe-builder-container">
+					<!-- JS renders here -->
+				</div>
 
-				<p>
-					<label><?php _e( 'Liste Ingrédients Complète', 'bsc-brew-manager' ); ?></label>
-					<textarea name="bsc_ingredients_list" rows="5" class="widefat" placeholder="<?php _e('Lister les ingrédients et quantités...', 'bsc-brew-manager'); ?>"><?php echo esc_textarea( $get_meta('bsc_ingredients_list') ); ?></textarea>
-				</p>
+				<!-- Hidden Inputs populated by JS -->
+				<input type="hidden" name="bsc_recipe_steps" id="bsc_recipe_steps">
+				<input type="hidden" name="bsc_malts" id="bsc_malts" value="<?php echo esc_attr( $get_meta('bsc_malts') ); ?>">
+				<input type="hidden" name="bsc_hops" id="bsc_hops" value="<?php echo esc_attr( $get_meta('bsc_hops') ); ?>">
+				<input type="hidden" name="bsc_ingredients_list" id="bsc_ingredients_list" value="<?php echo esc_attr( $get_meta('bsc_ingredients_list') ); ?>">
+				<input type="hidden" name="bsc_mash_schedule" id="bsc_mash_schedule" value="<?php echo esc_attr( $get_meta('bsc_mash_schedule') ); ?>">
+				<input type="hidden" name="bsc_equipment" id="bsc_equipment" value="<?php echo esc_attr( $get_meta('bsc_equipment') ); ?>">
 
-				<p>
-					<label><?php _e( 'Processus / Paliers', 'bsc-brew-manager' ); ?></label>
-					<textarea name="bsc_mash_schedule" rows="5" class="widefat" placeholder="<?php _e('Détails du brassage...', 'bsc-brew-manager'); ?>"><?php echo esc_textarea( $get_meta('bsc_mash_schedule') ); ?></textarea>
-				</p>
+				<!-- Photos -->
+				<div class="bsc-step-card">
+					<h3><?php _e( 'Photos', 'bsc-brew-manager' ); ?></h3>
+					<p>
+						<label><?php _e( 'Photo de la Bière', 'bsc-brew-manager' ); ?></label>
+						<input type="file" name="bsc_beer_image" accept="image/*">
+						<?php if ( $post_id && has_post_thumbnail( $post_id ) ) {
+							echo '<br>' . get_the_post_thumbnail( $post_id, 'thumbnail' );
+						} ?>
+					</p>
+					<p>
+						<label><?php _e( 'Photo de l\'étiquette', 'bsc-brew-manager' ); ?></label>
+						<input type="file" name="bsc_label_image" accept="image/*">
+					</p>
+				</div>
 
-				<p>
-					<label><?php _e( 'Matériel utilisé', 'bsc-brew-manager' ); ?></label>
-					<textarea name="bsc_equipment" rows="3" class="widefat" placeholder="<?php _e('Marque, Cuve, etc...', 'bsc-brew-manager'); ?>"><?php echo esc_textarea( $get_meta('bsc_equipment') ); ?></textarea>
-				</p>
-
-				<p>
+				<div class="bsc-step-card">
 					<label><?php _e( 'Notes de dégustation (Goût)', 'bsc-brew-manager' ); ?></label>
-					<textarea name="bsc_taste_notes" rows="3" class="widefat"><?php echo esc_textarea( $get_meta('bsc_taste_notes') ); ?></textarea>
-				</p>
-
-				<h3><?php _e( 'Photos', 'bsc-brew-manager' ); ?></h3>
-				<p>
-					<label><?php _e( 'Photo de la Bière', 'bsc-brew-manager' ); ?></label>
-					<input type="file" name="bsc_beer_image" accept="image/*">
-					<?php if ( $post_id && has_post_thumbnail( $post_id ) ) {
-						echo '<br>' . get_the_post_thumbnail( $post_id, 'thumbnail' );
-					} ?>
-				</p>
-				<p>
-					<label><?php _e( 'Photo de l\'étiquette', 'bsc-brew-manager' ); ?></label>
-					<input type="file" name="bsc_label_image" accept="image/*">
-				</p>
+					<textarea name="bsc_taste_notes" rows="3" class="bsc-item-input"><?php echo esc_textarea( $get_meta('bsc_taste_notes') ); ?></textarea>
+				</div>
 
 				<p>
-					<input type="submit" name="bsc_submit_recipe" value="<?php echo $post_id ? __( 'Mettre à jour', 'bsc-brew-manager' ) : __( 'Enregistrer la recette', 'bsc-brew-manager' ); ?>" class="button button-primary">
+					<input type="submit" name="bsc_submit_recipe" value="<?php echo $post_id ? __( 'Mettre à jour', 'bsc-brew-manager' ) : __( 'Enregistrer la recette', 'bsc-brew-manager' ); ?>" class="button button-primary bsc-btn-add-step" style="width:100%;">
 				</p>
 			</form>
 		</div>
@@ -371,6 +383,12 @@ class BSC_Form_Handler {
 		if ( is_wp_error( $post_id ) ) return;
 
 		// Save Meta
+		// Note: bsc_recipe_steps is saved as JSON string (sanitized by wp_kses or similar, but meta handles it)
+		// We use stripslashes because WP adds slashes to $_POST
+		if ( isset( $_POST['bsc_recipe_steps'] ) ) {
+			update_post_meta( $post_id, 'bsc_recipe_steps', wp_unslash( $_POST['bsc_recipe_steps'] ) );
+		}
+
 		$fields = array(
 			'bsc_brewery_id', 'bsc_style',
 			'bsc_batch_volume', 'bsc_abv', 'bsc_ibu', 'bsc_color', 'bsc_boil_time',
