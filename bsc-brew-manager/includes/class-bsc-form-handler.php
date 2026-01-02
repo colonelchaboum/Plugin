@@ -382,11 +382,39 @@ class BSC_Form_Handler {
 
 		if ( is_wp_error( $post_id ) ) return;
 
+		// Handle File Uploads (Pre-load for Steps)
+		require_once( ABSPATH . 'wp-admin/includes/image.php' );
+		require_once( ABSPATH . 'wp-admin/includes/file.php' );
+		require_once( ABSPATH . 'wp-admin/includes/media.php' );
+
 		// Save Meta
 		// Note: bsc_recipe_steps is saved as JSON string (sanitized by wp_kses or similar, but meta handles it)
 		// We use stripslashes because WP adds slashes to $_POST
 		if ( isset( $_POST['bsc_recipe_steps'] ) ) {
-			update_post_meta( $post_id, 'bsc_recipe_steps', wp_unslash( $_POST['bsc_recipe_steps'] ) );
+			$steps_json = wp_unslash( $_POST['bsc_recipe_steps'] );
+			$steps = json_decode( $steps_json, true );
+
+			if ( is_array( $steps ) ) {
+				foreach ( $steps as $index => &$step ) {
+					// Handle Image
+					if ( isset( $step['id'] ) ) {
+						$file_key = 'bsc_step_image_' . $step['id'];
+						if ( ! empty( $_FILES[ $file_key ]['name'] ) ) {
+							$att_id = media_handle_upload( $file_key, $post_id );
+							if ( ! is_wp_error( $att_id ) ) {
+								$step['image_id'] = $att_id;
+								$step['image_url'] = wp_get_attachment_url( $att_id );
+							}
+						}
+					}
+					// Sanitize Comment
+					if ( isset( $step['comment'] ) ) {
+						$step['comment'] = sanitize_textarea_field( $step['comment'] );
+					}
+				}
+				unset( $step ); // break ref
+				update_post_meta( $post_id, 'bsc_recipe_steps', json_encode( $steps ) );
+			}
 		}
 
 		$fields = array(
