@@ -68,13 +68,17 @@ class BSC_Dashboard {
 			echo '<p>' . __( 'Aucune brasserie trouvée.', 'bsc-brew-manager' ) . '</p>';
 		} else {
 			echo '<table class="widefat fixed striped">';
-			echo '<thead><tr><th>Nom</th><th>État</th><th>Actions</th></tr></thead>';
+			echo '<thead><tr><th style="width: 60px;">' . __( 'Logo', 'bsc-brew-manager' ) . '</th><th>Nom</th><th>État</th><th>Actions</th></tr></thead>';
 			echo '<tbody>';
 			foreach ( $breweries as $brewery ) {
 				$edit_link = add_query_arg( array( 'edit_id' => $brewery->ID ) ); // Assuming current page handles edit
 				$delete_link = wp_nonce_url( add_query_arg( array( 'bsc_action' => 'delete', 'post_id' => $brewery->ID ) ), 'bsc_delete_' . $brewery->ID );
 
+				$logo_url = has_post_thumbnail( $brewery->ID ) ? get_the_post_thumbnail_url( $brewery->ID, 'thumbnail' ) : get_post_meta( $brewery->ID, 'bsc_image_url', true );
+				$logo_html = $logo_url ? '<img src="' . esc_url( $logo_url ) . '" style="max-width:50px; height:auto; border-radius:4px;">' : '';
+
 				echo '<tr>';
+				echo '<td>' . $logo_html . '</td>';
 				echo '<td>' . esc_html( $brewery->post_title ) . '</td>';
 				echo '<td>' . esc_html( get_post_status_object( $brewery->post_status )->label ) . '</td>';
 				echo '<td>';
@@ -111,7 +115,7 @@ class BSC_Dashboard {
 			echo '<p>' . __( 'Aucune bière trouvée.', 'bsc-brew-manager' ) . '</p>';
 		} else {
 			echo '<table class="widefat fixed striped">';
-			echo '<thead><tr><th>Nom</th><th>Brasserie</th><th>Style</th><th>Actions</th></tr></thead>';
+			echo '<thead><tr><th style="width: 60px;">' . __( 'Photo', 'bsc-brew-manager' ) . '</th><th>Nom</th><th>Brasserie</th><th>Style</th><th>Actions</th></tr></thead>';
 			echo '<tbody>';
 			foreach ( $beers as $beer ) {
 				$brewery_id = get_post_meta( $beer->ID, 'bsc_brewery_id', true );
@@ -121,7 +125,11 @@ class BSC_Dashboard {
 				$edit_link = add_query_arg( array( 'edit_id' => $beer->ID ) );
 				$delete_link = wp_nonce_url( add_query_arg( array( 'bsc_action' => 'delete', 'post_id' => $beer->ID ) ), 'bsc_delete_' . $beer->ID );
 
+				$logo_url = has_post_thumbnail( $beer->ID ) ? get_the_post_thumbnail_url( $beer->ID, 'thumbnail' ) : get_post_meta( $beer->ID, 'bsc_image_url', true );
+				$logo_html = $logo_url ? '<img src="' . esc_url( $logo_url ) . '" style="max-width:50px; height:auto; border-radius:4px;">' : '';
+
 				echo '<tr>';
+				echo '<td>' . $logo_html . '</td>';
 				echo '<td>' . esc_html( $beer->post_title ) . '</td>';
 				echo '<td>' . esc_html( $brewery_name ) . '</td>';
 				echo '<td>' . esc_html( $style ) . '</td>';
