@@ -8,12 +8,10 @@ class BSC_Supabase {
 
 	private $api_url;
 	private $api_key;
-	private $project_id;
 
 	public function __construct() {
 		$this->api_url    = get_option( 'bsc_supabase_url' );
 		$this->api_key    = get_option( 'bsc_supabase_api_key' );
-		// $this->project_id = get_option( 'bsc_supabase_project_id' ); // Optional if URL is full
 	}
 
 	public function connection_test() {
@@ -49,12 +47,24 @@ class BSC_Supabase {
 		$supabase_id = get_post_meta( $post_id, 'bsc_supabase_id', true );
 
 		$data = array(
-			'name'        => $post->post_title,
-			'description' => $post->post_content,
+			'name'           => $post->post_title,
+			'description_fr' => $post->post_content,
+			'contact_name'   => get_post_meta( $post_id, 'bsc_contact_name', true ),
+			'city'           => get_post_meta( $post_id, 'bsc_city', true ),
+			'contry'         => get_post_meta( $post_id, 'bsc_country', true ), // User specified 'contry'
+			'adress'         => get_post_meta( $post_id, 'bsc_address', true ), // User specified 'adress'
+			'postcode'       => get_post_meta( $post_id, 'bsc_postcode', true ),
+			'phone'          => get_post_meta( $post_id, 'bsc_phone', true ),
+			'website'        => get_post_meta( $post_id, 'bsc_website', true ),
+			// 'folowers' -> read only from WP usually? Or user can update?
+			// If we sync TO supabase, we might overwrite followers if WP is master?
+			// Usually followers are counted in App. I should probably NOT send followers unless I track them in WP.
+			// I'll skip sending 'folowers' to Supabase to avoid zeroing it out.
 		);
 
+		// Image URL
 		if ( has_post_thumbnail( $post_id ) ) {
-			$data['logo_url'] = get_the_post_thumbnail_url( $post_id, 'full' );
+			$data['image_url'] = get_the_post_thumbnail_url( $post_id, 'full' );
 		}
 
 		$method = 'POST';
@@ -97,15 +107,22 @@ class BSC_Supabase {
 
 		$supabase_id = get_post_meta( $post_id, 'bsc_supabase_id', true );
 
-		$style = get_post_meta( $post_id, 'bsc_style', true );
-		$abv = get_post_meta( $post_id, 'bsc_abv', true );
-
 		$data = array(
-			'name'       => $post->post_title,
-			'style'      => $style,
-			'abv'        => (float) $abv,
-			'brewery_id' => (int) $brewery_supabase_id,
+			'name'           => $post->post_title,
+			'description_fr' => $post->post_content,
+			'style'          => get_post_meta( $post_id, 'bsc_style', true ),
+			'abv'            => (float) get_post_meta( $post_id, 'bsc_abv', true ),
+			'ibu'            => (int) get_post_meta( $post_id, 'bsc_ibu', true ),
+			'hops'           => get_post_meta( $post_id, 'bsc_hops', true ),
+			'malts'          => get_post_meta( $post_id, 'bsc_malts', true ),
+			'brewery_id'     => (int) $brewery_supabase_id,
+			// Skip rating/checkins sync TO Supabase as that's user generated data there?
+			// Unless WP is master for creating rating? No, App users rate.
 		);
+
+		if ( has_post_thumbnail( $post_id ) ) {
+			$data['image_url'] = get_the_post_thumbnail_url( $post_id, 'full' );
+		}
 
 		$method = 'POST';
 		$endpoint = '/rest/v1/beers';
@@ -150,7 +167,6 @@ class BSC_Supabase {
 			$breweries = json_decode( wp_remote_retrieve_body( $response ), true );
 			if ( is_array( $breweries ) ) {
 				foreach ( $breweries as $b ) {
-					// Check if exists
 					$existing = get_posts( array(
 						'post_type' => 'bsc_brewery',
 						'meta_key' => 'bsc_supabase_id',
@@ -160,22 +176,34 @@ class BSC_Supabase {
 
 					$args = array(
 						'post_title' => $b['name'],
-						'post_content' => isset($b['description']) ? $b['description'] : '',
+						'post_content' => isset($b['description_fr']) ? $b['description_fr'] : '',
 						'post_status' => 'publish',
 						'post_type' => 'bsc_brewery'
 					);
 
+					$pid = 0;
 					if ( empty( $existing ) ) {
-						// Create
 						$pid = wp_insert_post( $args );
 						if ( ! is_wp_error( $pid ) ) {
 							update_post_meta( $pid, 'bsc_supabase_id', $b['id'] );
 						}
 					} else {
-						// Update
-						$args['ID'] = $existing[0]->ID;
+						$pid = $existing[0]->ID;
+						$args['ID'] = $pid;
 						wp_update_post( $args );
-						// Update stats if needed? Wait for sync_ratings for stats.
+					}
+
+					if ( $pid && ! is_wp_error( $pid ) ) {
+						// Update Meta
+						update_post_meta( $pid, 'bsc_contact_name', isset($b['contact_name']) ? $b['contact_name'] : '' );
+						update_post_meta( $pid, 'bsc_city', isset($b['city']) ? $b['city'] : '' );
+						update_post_meta( $pid, 'bsc_country', isset($b['contry']) ? $b['contry'] : '' ); // Mapping 'contry' -> 'bsc_country'
+						update_post_meta( $pid, 'bsc_address', isset($b['adress']) ? $b['adress'] : '' ); // Mapping 'adress' -> 'bsc_address'
+						update_post_meta( $pid, 'bsc_postcode', isset($b['postcode']) ? $b['postcode'] : '' );
+						update_post_meta( $pid, 'bsc_phone', isset($b['phone']) ? $b['phone'] : '' );
+						update_post_meta( $pid, 'bsc_website', isset($b['website']) ? $b['website'] : '' );
+						update_post_meta( $pid, 'bsc_followers', isset($b['folowers']) ? $b['folowers'] : 0 );
+						update_post_meta( $pid, 'bsc_image_url', isset($b['image_url']) ? $b['image_url'] : '' );
 					}
 				}
 			}
@@ -205,6 +233,7 @@ class BSC_Supabase {
 
 					$args = array(
 						'post_title' => $beer['name'],
+						'post_content' => isset($beer['description_fr']) ? $beer['description_fr'] : '',
 						'post_status' => 'publish',
 						'post_type' => 'bsc_recipe'
 					);
@@ -222,13 +251,20 @@ class BSC_Supabase {
 					}
 
 					if ( $pid && ! is_wp_error( $pid ) ) {
-						update_post_meta( $pid, 'bsc_style', $beer['style'] );
-						update_post_meta( $pid, 'bsc_abv', $beer['abv'] );
+						update_post_meta( $pid, 'bsc_style', isset($beer['style']) ? $beer['style'] : '' );
+						update_post_meta( $pid, 'bsc_abv', isset($beer['abv']) ? $beer['abv'] : '' );
+						update_post_meta( $pid, 'bsc_ibu', isset($beer['ibu']) ? $beer['ibu'] : '' );
+						update_post_meta( $pid, 'bsc_hops', isset($beer['hops']) ? $beer['hops'] : '' );
+						update_post_meta( $pid, 'bsc_malts', isset($beer['malts']) ? $beer['malts'] : '' );
+						update_post_meta( $pid, 'bsc_image_url', isset($beer['image_url']) ? $beer['image_url'] : '' );
 						if ( $brewery_id ) {
 							update_post_meta( $pid, 'bsc_brewery_id', $brewery_id );
 						}
-						if ( isset( $beer['rating'] ) ) {
-							update_post_meta( $pid, 'bsc_average_rating', $beer['rating'] );
+						if ( isset( $beer['average_rating'] ) ) {
+							update_post_meta( $pid, 'bsc_average_rating', $beer['average_rating'] );
+						}
+						if ( isset( $beer['total_checkins'] ) ) {
+							update_post_meta( $pid, 'bsc_total_checkins', $beer['total_checkins'] );
 						}
 					}
 				}
@@ -271,16 +307,12 @@ class BSC_Supabase {
 	}
 
 	public function sync_ratings() {
-		$this->import_from_supabase(); // Re-use import logic which updates content and ratings?
-		// Actually import_from_supabase does everything.
-		// So sync_ratings can just call it? Or maybe sync_ratings should only update ratings to avoid overwriting WP edits?
-		// User said "Affichage sur le site uniquement si créé par un utilisateur WP".
-		// Import creates posts. This conflicts with "Affichage...".
-		// But "Inverse" implies full sync.
-		// I will keep sync_ratings as updating RATINGS only for existing posts, as per original requirement.
-		// import_from_supabase will be Manual or "Sync All" button.
+		// Use import to update everything (ratings + content) since inverse sync is requested?
+		// But sync_ratings runs on cron. Import is heavy.
+		// I will keep sync_ratings focused on ratings for now, or just rely on manual import.
+		// The user said "comme les brasseries la mise à jour doit etre faite en import comme en export".
+		// This implies automatic reverse sync might be desired, but for now I'll update sync_ratings to fetch the new rating fields.
 
-		// Original sync_ratings logic:
 		$beers = get_posts( array(
 			'post_type' => 'bsc_recipe',
 			'numberposts' => -1,
@@ -291,21 +323,40 @@ class BSC_Supabase {
 			$supabase_id = get_post_meta( $beer->ID, 'bsc_supabase_id', true );
 			if ( ! $supabase_id ) continue;
 
-			$response = $this->make_request( '/rest/v1/beers?id=eq.' . $supabase_id . '&select=rating' );
+			// Fetch rating and checkins
+			$response = $this->make_request( '/rest/v1/beers?id=eq.' . $supabase_id . '&select=average_rating,total_checkins' );
 			if ( ! is_wp_error( $response ) ) {
 				$body = json_decode( wp_remote_retrieve_body( $response ), true );
-				if ( ! empty( $body ) && isset( $body[0]['rating'] ) ) {
-					update_post_meta( $beer->ID, 'bsc_average_rating', $body[0]['rating'] );
+				if ( ! empty( $body ) ) {
+					if ( isset( $body[0]['average_rating'] ) ) {
+						update_post_meta( $beer->ID, 'bsc_average_rating', $body[0]['average_rating'] );
+					}
+					if ( isset( $body[0]['total_checkins'] ) ) {
+						update_post_meta( $beer->ID, 'bsc_total_checkins', $body[0]['total_checkins'] );
+					}
 				}
 			}
 		}
 
-		// Stats update... (same as before)
+		// Update Brewery Stats (from beers)
+		// Or fetch 'folowers' from breweries table?
 		$breweries = get_posts( array(
 			'post_type' => 'bsc_brewery',
 			'numberposts' => -1
 		) );
 		foreach ( $breweries as $brewery ) {
+			$supabase_id = get_post_meta( $brewery->ID, 'bsc_supabase_id', true );
+			if ( $supabase_id ) {
+				$response = $this->make_request( '/rest/v1/breweries?id=eq.' . $supabase_id . '&select=folowers' );
+				if ( ! is_wp_error( $response ) ) {
+					$body = json_decode( wp_remote_retrieve_body( $response ), true );
+					if ( ! empty( $body ) && isset( $body[0]['folowers'] ) ) {
+						update_post_meta( $brewery->ID, 'bsc_followers', $body[0]['folowers'] );
+					}
+				}
+			}
+
+			// Recalculate average rating from beers
 			$brewery_beers = get_posts( array(
 				'post_type' => 'bsc_recipe',
 				'meta_key' => 'bsc_brewery_id',

@@ -26,8 +26,8 @@ class BSC_Meta {
 			__( 'Détails de la Brasserie', 'bsc-brew-manager' ),
 			array( $this, 'render_brewery_meta_box' ),
 			'bsc_brewery',
-			'side',
-			'default'
+			'normal', // Changed to normal to give more space for address etc.
+			'high'
 		);
 	}
 
@@ -36,12 +36,43 @@ class BSC_Meta {
 
 		$supabase_id = get_post_meta( $post->ID, 'bsc_supabase_id', true );
 		$avg_rating = get_post_meta( $post->ID, 'bsc_average_rating', true );
+		$followers = get_post_meta( $post->ID, 'bsc_followers', true );
 
-		echo '<p><label>' . __( 'ID Supabase:', 'bsc-brew-manager' ) . '</label><br>';
+		echo '<div class="bsc-meta-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">';
+
+		echo '<div>';
+		echo '<p><label><strong>' . __( 'ID Supabase:', 'bsc-brew-manager' ) . '</strong></label><br>';
 		echo '<input type="text" value="' . esc_attr( $supabase_id ) . '" readonly style="background:#eee; width:100%;" /></p>';
+		echo '</div>';
 
-		echo '<p><label>' . __( 'Note Moyenne:', 'bsc-brew-manager' ) . '</label><br>';
-		echo '<input type="text" value="' . esc_attr( $avg_rating ) . '" readonly style="background:#eee; width:100%;" /></p>';
+		echo '<div>';
+		echo '<p><label><strong>' . __( 'Stats:', 'bsc-brew-manager' ) . '</strong></label><br>';
+		echo __( 'Note Moyenne:', 'bsc-brew-manager' ) . ' <strong>' . esc_html( $avg_rating ) . '/5</strong><br>';
+		echo __( 'Abonnés:', 'bsc-brew-manager' ) . ' <strong>' . esc_html( $followers ) . '</strong></p>';
+		echo '</div>';
+
+		echo '</div>'; // End grid
+
+		// Address & Contact Fields
+		$fields = array(
+			'bsc_contact_name' => __( 'Nom du contact', 'bsc-brew-manager' ),
+			'bsc_address'      => __( 'Adresse', 'bsc-brew-manager' ),
+			'bsc_city'         => __( 'Ville', 'bsc-brew-manager' ),
+			'bsc_postcode'     => __( 'Code Postal', 'bsc-brew-manager' ),
+			'bsc_country'      => __( 'Pays', 'bsc-brew-manager' ),
+			'bsc_phone'        => __( 'Téléphone', 'bsc-brew-manager' ),
+			'bsc_website'      => __( 'Site Web', 'bsc-brew-manager' ),
+		);
+
+		echo '<hr>';
+		echo '<h4>' . __( 'Coordonnées', 'bsc-brew-manager' ) . '</h4>';
+		echo '<div class="bsc-meta-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">';
+		foreach ( $fields as $key => $label ) {
+			$value = get_post_meta( $post->ID, $key, true );
+			echo '<p><label for="' . esc_attr( $key ) . '">' . esc_html( $label ) . '</label><br />';
+			echo '<input type="text" id="' . esc_attr( $key ) . '" name="' . esc_attr( $key ) . '" value="' . esc_attr( $value ) . '" style="width:100%;" /></p>';
+		}
+		echo '</div>';
 	}
 
 	public function render_recipe_meta_box( $post ) {
@@ -49,8 +80,6 @@ class BSC_Meta {
 
 		// Brewery Selection
 		$brewery_id = get_post_meta( $post->ID, 'bsc_brewery_id', true );
-		// Get all breweries (admin can see all, usually we limit to user but for admin screen show all)
-		// For simplicity in admin, we show all breweries.
 		$breweries = get_posts( array(
 			'post_type' => 'bsc_brewery',
 			'numberposts' => -1,
@@ -67,15 +96,21 @@ class BSC_Meta {
 		}
 		echo '</select></p>';
 
-		// Supabase ID
+		// Supabase ID & Stats
 		$supabase_id = get_post_meta( $post->ID, 'bsc_supabase_id', true );
-		echo '<p><label>' . __( 'ID Supabase:', 'bsc-brew-manager' ) . '</label><br>';
-		echo '<input type="text" value="' . esc_attr( $supabase_id ) . '" readonly style="background:#eee; width:100%;" /></p>';
+		$avg_rating = get_post_meta( $post->ID, 'bsc_average_rating', true );
+		$checkins = get_post_meta( $post->ID, 'bsc_total_checkins', true );
+
+		echo '<div class="bsc-meta-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">';
+		echo '<div><p><label>' . __( 'ID Supabase:', 'bsc-brew-manager' ) . '</label><br>';
+		echo '<input type="text" value="' . esc_attr( $supabase_id ) . '" readonly style="background:#eee; width:100%;" /></p></div>';
+		echo '<div><p>' . __( 'Note:', 'bsc-brew-manager' ) . ' <strong>' . esc_html( $avg_rating ) . '/5</strong><br>';
+		echo __( 'Checkins:', 'bsc-brew-manager' ) . ' <strong>' . esc_html( $checkins ) . '</strong></p></div>';
+		echo '</div>';
 
 		// Style
-		// Styles List
 		$styles = array( 'IPA', 'Stout', 'Lager', 'Pale Ale', 'Porter', 'Saison', 'Sour', 'Wheat Beer', 'Belgian', 'Other' );
-		$current_style = get_post_meta( $post->ID, 'bsc_style', true ); // Using Meta for now as requested "Menu déroulant"
+		$current_style = get_post_meta( $post->ID, 'bsc_style', true );
 
 		echo '<p><label for="bsc_style"><strong>' . __( 'Style', 'bsc-brew-manager' ) . '</strong></label><br>';
 		echo '<select name="bsc_style" id="bsc_style" style="width:100%;">';
@@ -84,39 +119,42 @@ class BSC_Meta {
 		}
 		echo '</select></p>';
 
-
+		// Technical Details
 		$fields = array(
-			'bsc_batch_volume'      => __( 'Volume Brassé (L)', 'bsc-brew-manager' ),
 			'bsc_abv'               => __( 'Degrés d\'alcool (%)', 'bsc-brew-manager' ),
+			'bsc_ibu'               => __( 'IBU (Amertume)', 'bsc-brew-manager' ),
 			'bsc_color'             => __( 'Couleur (EBC/SRM)', 'bsc-brew-manager' ),
+			'bsc_batch_volume'      => __( 'Volume Brassé (L)', 'bsc-brew-manager' ),
 			'bsc_boil_time'         => __( 'Temps d\'ébullition (min)', 'bsc-brew-manager' ),
 			'bsc_fermentation_temp' => __( 'Température de fermentation (°C)', 'bsc-brew-manager' ),
 		);
 
-		$textareas = array(
-			'bsc_ingredients_list' => __( 'Liste des Ingrédients', 'bsc-brew-manager' ),
-			'bsc_mash_schedule'    => __( 'Processus / Paliers de Température (Durée, Température)', 'bsc-brew-manager' ),
-			'bsc_equipment'        => __( 'Matériel utilisé (Marque, Type)', 'bsc-brew-manager' ),
-			'bsc_taste_notes'      => __( 'Goût / Notes de dégustation', 'bsc-brew-manager' ),
-		);
-
-		echo '<div class="bsc-meta-box">';
-
-		// Simple Inputs
+		echo '<h4>' . __( 'Caractéristiques', 'bsc-brew-manager' ) . '</h4>';
+		echo '<div class="bsc-meta-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">';
 		foreach ( $fields as $key => $label ) {
 			$value = get_post_meta( $post->ID, $key, true );
 			echo '<p><label for="' . esc_attr( $key ) . '">' . esc_html( $label ) . '</label><br />';
 			echo '<input type="text" id="' . esc_attr( $key ) . '" name="' . esc_attr( $key ) . '" value="' . esc_attr( $value ) . '" style="width:100%;" /></p>';
 		}
+		echo '</div>';
 
-		// Textareas
+		// Ingredients Textareas
+		$textareas = array(
+			'bsc_hops'             => __( 'Houblons (Hops)', 'bsc-brew-manager' ),
+			'bsc_malts'            => __( 'Malts', 'bsc-brew-manager' ),
+			'bsc_ingredients_list' => __( 'Liste complète Ingrédients', 'bsc-brew-manager' ),
+			'bsc_mash_schedule'    => __( 'Processus / Paliers', 'bsc-brew-manager' ),
+			'bsc_equipment'        => __( 'Matériel utilisé', 'bsc-brew-manager' ),
+			'bsc_taste_notes'      => __( 'Notes de dégustation', 'bsc-brew-manager' ),
+		);
+
 		foreach ( $textareas as $key => $label ) {
 			$value = get_post_meta( $post->ID, $key, true );
 			echo '<p><label for="' . esc_attr( $key ) . '">' . esc_html( $label ) . '</label><br />';
-			echo '<textarea id="' . esc_attr( $key ) . '" name="' . esc_attr( $key ) . '" rows="5" style="width:100%;">' . esc_textarea( $value ) . '</textarea></p>';
+			echo '<textarea id="' . esc_attr( $key ) . '" name="' . esc_attr( $key ) . '" rows="3" style="width:100%;">' . esc_textarea( $value ) . '</textarea></p>';
 		}
 
-		// Image Label Handling
+		// Image Label
 		$label_img_id = get_post_meta( $post->ID, 'bsc_label_image_id', true );
 		echo '<p><label for="bsc_label_image_id">' . __( 'ID Image de l\'étiquette', 'bsc-brew-manager' ) . '</label><br />';
 		echo '<input type="number" id="bsc_label_image_id" name="bsc_label_image_id" value="' . esc_attr( $label_img_id ) . '" /></p>';
@@ -140,37 +178,40 @@ class BSC_Meta {
 			return;
 		}
 
-		// Brewery Fields (none to save manually really, except maybe if we added editables, but Supabase ID is read only)
-		// But if we wanted to save something:
+		$post_type = get_post_type( $post_id );
 
-		// Recipe Fields
-		$fields = array(
-			'bsc_brewery_id',
-			'bsc_style',
-			'bsc_batch_volume',
-			'bsc_abv',
-			'bsc_color',
-			'bsc_boil_time',
-			'bsc_fermentation_temp',
-			'bsc_ingredients_list',
-			'bsc_mash_schedule',
-			'bsc_equipment',
-			'bsc_taste_notes',
-			'bsc_label_image_id',
-		);
-
-		foreach ( $fields as $field ) {
-			if ( isset( $_POST[ $field ] ) ) {
-				update_post_meta( $post_id, $field, sanitize_text_field( $_POST[ $field ] ) );
+		if ( $post_type === 'bsc_brewery' ) {
+			$fields = array(
+				'bsc_contact_name', 'bsc_address', 'bsc_city', 'bsc_postcode',
+				'bsc_country', 'bsc_phone', 'bsc_website'
+			);
+			foreach ( $fields as $field ) {
+				if ( isset( $_POST[ $field ] ) ) {
+					update_post_meta( $post_id, $field, sanitize_text_field( $_POST[ $field ] ) );
+				}
+			}
+		} elseif ( $post_type === 'bsc_recipe' ) {
+			$fields = array(
+				'bsc_brewery_id', 'bsc_style',
+				'bsc_abv', 'bsc_ibu', 'bsc_color',
+				'bsc_batch_volume', 'bsc_boil_time', 'bsc_fermentation_temp',
+				'bsc_hops', 'bsc_malts', 'bsc_ingredients_list',
+				'bsc_mash_schedule', 'bsc_equipment', 'bsc_taste_notes',
+				'bsc_label_image_id'
+			);
+			foreach ( $fields as $field ) {
+				if ( isset( $_POST[ $field ] ) ) {
+					update_post_meta( $post_id, $field, sanitize_textarea_field( $_POST[ $field ] ) ); // textarea for safety on larger fields
+				}
 			}
 		}
 
 		// Trigger Sync on Save
 		if ( class_exists( 'BSC_Supabase' ) ) {
 			$supabase = new BSC_Supabase();
-			if ( get_post_type( $post_id ) === 'bsc_brewery' ) {
+			if ( $post_type === 'bsc_brewery' ) {
 				$supabase->sync_brewery( $post_id );
-			} elseif ( get_post_type( $post_id ) === 'bsc_recipe' ) {
+			} elseif ( $post_type === 'bsc_recipe' ) {
 				$supabase->sync_beer( $post_id );
 			}
 		}

@@ -21,6 +21,7 @@ class BSC_Form_Handler {
 		$post_id = 0;
 		$title = '';
 		$content = '';
+		$meta = array();
 
 		if ( isset( $_GET['edit_id'] ) ) {
 			$post_id = intval( $_GET['edit_id'] );
@@ -28,10 +29,15 @@ class BSC_Form_Handler {
 			if ( $post && $post->post_type === 'bsc_brewery' && $post->post_author == get_current_user_id() ) {
 				$title = $post->post_title;
 				$content = $post->post_content;
+				$meta = get_post_meta( $post_id );
 			} else {
-				$post_id = 0; // Invalid edit attempt
+				$post_id = 0;
 			}
 		}
+
+		$get_meta = function( $key ) use ( $meta ) {
+			return isset( $meta[$key][0] ) ? $meta[$key][0] : '';
+		};
 
 		ob_start();
 		?>
@@ -50,6 +56,41 @@ class BSC_Form_Handler {
 					<label for="bsc_brewery_desc"><?php _e( 'Description', 'bsc-brew-manager' ); ?></label>
 					<?php wp_editor( $content, 'bsc_brewery_desc', array( 'media_buttons' => false, 'textarea_rows' => 5 ) ); ?>
 				</p>
+
+				<div class="bsc-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+					<p>
+						<label><?php _e( 'Nom Contact', 'bsc-brew-manager' ); ?></label>
+						<input type="text" name="bsc_contact_name" value="<?php echo esc_attr( $get_meta('bsc_contact_name') ); ?>" class="widefat">
+					</p>
+					<p>
+						<label><?php _e( 'Téléphone', 'bsc-brew-manager' ); ?></label>
+						<input type="text" name="bsc_phone" value="<?php echo esc_attr( $get_meta('bsc_phone') ); ?>" class="widefat">
+					</p>
+					<p>
+						<label><?php _e( 'Site Web', 'bsc-brew-manager' ); ?></label>
+						<input type="text" name="bsc_website" value="<?php echo esc_attr( $get_meta('bsc_website') ); ?>" class="widefat">
+					</p>
+					<p>
+						<label><?php _e( 'Pays', 'bsc-brew-manager' ); ?></label>
+						<input type="text" name="bsc_country" value="<?php echo esc_attr( $get_meta('bsc_country') ); ?>" class="widefat">
+					</p>
+				</div>
+
+				<p>
+					<label><?php _e( 'Adresse', 'bsc-brew-manager' ); ?></label>
+					<input type="text" name="bsc_address" value="<?php echo esc_attr( $get_meta('bsc_address') ); ?>" class="widefat">
+				</p>
+				<div class="bsc-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+					<p>
+						<label><?php _e( 'Ville', 'bsc-brew-manager' ); ?></label>
+						<input type="text" name="bsc_city" value="<?php echo esc_attr( $get_meta('bsc_city') ); ?>" class="widefat">
+					</p>
+					<p>
+						<label><?php _e( 'Code Postal', 'bsc-brew-manager' ); ?></label>
+						<input type="text" name="bsc_postcode" value="<?php echo esc_attr( $get_meta('bsc_postcode') ); ?>" class="widefat">
+					</p>
+				</div>
+
 				<p>
 					<label><?php _e( 'Logo de la Brasserie', 'bsc-brew-manager' ); ?></label>
 					<input type="file" name="bsc_brewery_logo" accept="image/*">
@@ -79,17 +120,15 @@ class BSC_Form_Handler {
 			$post_id = intval( $_POST['bsc_post_id'] );
 			$existing_post = get_post( $post_id );
 			if ( $existing_post && $existing_post->post_author == get_current_user_id() ) {
-				// Update
 				wp_update_post( array(
 					'ID'           => $post_id,
 					'post_title'   => $title,
 					'post_content' => $content,
 				) );
 			} else {
-				return; // Security check failed
+				return;
 			}
 		} else {
-			// Create
 			$post_id = wp_insert_post( array(
 				'post_title'   => $title,
 				'post_content' => $content,
@@ -100,6 +139,15 @@ class BSC_Form_Handler {
 		}
 
 		if ( ! is_wp_error( $post_id ) && $post_id > 0 ) {
+			// Save Meta
+			$fields = array( 'bsc_contact_name', 'bsc_phone', 'bsc_website', 'bsc_country', 'bsc_address', 'bsc_city', 'bsc_postcode' );
+			foreach ( $fields as $field ) {
+				if ( isset( $_POST[ $field ] ) ) {
+					update_post_meta( $post_id, $field, sanitize_text_field( $_POST[ $field ] ) );
+				}
+			}
+
+			// Handle Image
 			require_once( ABSPATH . 'wp-admin/includes/image.php' );
 			require_once( ABSPATH . 'wp-admin/includes/file.php' );
 			require_once( ABSPATH . 'wp-admin/includes/media.php' );
@@ -117,7 +165,6 @@ class BSC_Form_Handler {
 				$supabase->sync_brewery( $post_id );
 			}
 
-			// Redirect
 			$redirect_url = remove_query_arg( 'edit_id' );
 			wp_redirect( add_query_arg( 'updated', 'true', $redirect_url ) );
 			exit;
@@ -140,19 +187,16 @@ class BSC_Form_Handler {
 			if ( $post && $post->post_type === 'bsc_recipe' && $post->post_author == get_current_user_id() ) {
 				$title = $post->post_title;
 				$content = $post->post_content;
-				// Fetch meta
 				$meta = get_post_meta( $post_id );
 			} else {
 				$post_id = 0;
 			}
 		}
 
-		// Helper for meta
 		$get_meta = function( $key ) use ( $meta ) {
 			return isset( $meta[$key][0] ) ? $meta[$key][0] : '';
 		};
 
-		// Get User's Breweries
 		$user_id = get_current_user_id();
 		$breweries = get_posts( array(
 			'post_type' => 'bsc_brewery',
@@ -165,7 +209,6 @@ class BSC_Form_Handler {
 			return '<p>' . __( 'Vous devez d\'abord créer une brasserie avant d\'ajouter une bière.', 'bsc-brew-manager' ) . '</p>';
 		}
 
-		// Handle Pre-selection
 		$preselected_brewery_id = isset( $_GET['brewery_id'] ) ? intval( $_GET['brewery_id'] ) : 0;
 
 		ob_start();
@@ -226,6 +269,10 @@ class BSC_Form_Handler {
 						<input type="number" step="0.1" name="bsc_abv" value="<?php echo esc_attr( $get_meta('bsc_abv') ); ?>">
 					</p>
 					<p>
+						<label><?php _e( 'IBU', 'bsc-brew-manager' ); ?></label>
+						<input type="number" name="bsc_ibu" value="<?php echo esc_attr( $get_meta('bsc_ibu') ); ?>">
+					</p>
+					<p>
 						<label><?php _e( 'Couleur (EBC)', 'bsc-brew-manager' ); ?></label>
 						<input type="text" name="bsc_color" value="<?php echo esc_attr( $get_meta('bsc_color') ); ?>">
 					</p>
@@ -240,7 +287,16 @@ class BSC_Form_Handler {
 				</div>
 
 				<p>
-					<label><?php _e( 'Ingrédients (Malt, Houblon, Levure)', 'bsc-brew-manager' ); ?></label>
+					<label><?php _e( 'Houblons (Hops)', 'bsc-brew-manager' ); ?></label>
+					<textarea name="bsc_hops" rows="3" class="widefat" placeholder="<?php _e('Citra, Mosaic...', 'bsc-brew-manager'); ?>"><?php echo esc_textarea( $get_meta('bsc_hops') ); ?></textarea>
+				</p>
+				<p>
+					<label><?php _e( 'Malts', 'bsc-brew-manager' ); ?></label>
+					<textarea name="bsc_malts" rows="3" class="widefat" placeholder="<?php _e('Pilsner, Munich...', 'bsc-brew-manager'); ?>"><?php echo esc_textarea( $get_meta('bsc_malts') ); ?></textarea>
+				</p>
+
+				<p>
+					<label><?php _e( 'Liste Ingrédients Complète', 'bsc-brew-manager' ); ?></label>
 					<textarea name="bsc_ingredients_list" rows="5" class="widefat" placeholder="<?php _e('Lister les ingrédients et quantités...', 'bsc-brew-manager'); ?>"><?php echo esc_textarea( $get_meta('bsc_ingredients_list') ); ?></textarea>
 				</p>
 
@@ -317,9 +373,9 @@ class BSC_Form_Handler {
 		// Save Meta
 		$fields = array(
 			'bsc_brewery_id', 'bsc_style',
-			'bsc_batch_volume', 'bsc_abv', 'bsc_color', 'bsc_boil_time',
+			'bsc_batch_volume', 'bsc_abv', 'bsc_ibu', 'bsc_color', 'bsc_boil_time',
 			'bsc_fermentation_temp', 'bsc_ingredients_list', 'bsc_mash_schedule',
-			'bsc_equipment', 'bsc_taste_notes'
+			'bsc_equipment', 'bsc_taste_notes', 'bsc_hops', 'bsc_malts'
 		);
 
 		foreach ( $fields as $field ) {
@@ -333,7 +389,6 @@ class BSC_Form_Handler {
 		require_once( ABSPATH . 'wp-admin/includes/file.php' );
 		require_once( ABSPATH . 'wp-admin/includes/media.php' );
 
-		// Beer Image (Featured)
 		if ( ! empty( $_FILES['bsc_beer_image']['name'] ) ) {
 			$attachment_id = media_handle_upload( 'bsc_beer_image', $post_id );
 			if ( ! is_wp_error( $attachment_id ) ) {
@@ -341,7 +396,6 @@ class BSC_Form_Handler {
 			}
 		}
 
-		// Label Image
 		if ( ! empty( $_FILES['bsc_label_image']['name'] ) ) {
 			$attachment_id = media_handle_upload( 'bsc_label_image', $post_id );
 			if ( ! is_wp_error( $attachment_id ) ) {
@@ -355,7 +409,6 @@ class BSC_Form_Handler {
 			$supabase->sync_beer( $post_id );
 		}
 
-		// Redirect
 		$redirect_url = remove_query_arg( 'edit_id' );
 		wp_redirect( add_query_arg( 'updated', 'true', get_permalink( $post_id ) ) );
 		exit;
