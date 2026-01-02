@@ -395,6 +395,17 @@ class BSC_Frontend_Display {
 											<span class="bsc-item-input" style="border:none; font-weight:bold;"><?php echo esc_html( $item['name'] ); ?></span>
 											<span class="bsc-item-input" style="border:none;"><?php echo esc_html( $item['qty'] ); ?></span>
 										</div>
+										<?php if ( $item['type'] === 'Malt' && ( ! empty($item['supplier']) || ! empty($item['ebc']) || ! empty($item['yield']) ) ) : ?>
+											<div class="bsc-item-details" style="font-size:0.85em; color:#666; padding-left: 65px; margin-top:-5px; margin-bottom:10px;">
+												<?php
+													$details = [];
+													if( ! empty($item['supplier']) ) $details[] = '🏭 ' . esc_html($item['supplier']);
+													if( ! empty($item['ebc']) ) $details[] = '🎨 ' . esc_html($item['ebc']) . ' EBC';
+													if( ! empty($item['yield']) ) $details[] = '📈 ' . esc_html($item['yield']) . '% Rendement';
+													echo implode(' &nbsp;&bull;&nbsp; ', $details);
+												?>
+											</div>
+										<?php endif; ?>
 									<?php endforeach; ?>
 								<?php endif; ?>
 							</div>

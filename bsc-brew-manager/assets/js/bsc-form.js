@@ -17,6 +17,40 @@ document.addEventListener('DOMContentLoaded', function() {
         prep: { dur: false, temp: false }
     };
 
+    // Malt List Data
+    const maltList = {
+        "Malts de Base": [
+            "Orge", "Pilsner / Pilsen", "Pale Ale", "Lager", "Vienna", "Munich Light", "Munich Dark",
+            "Mild Malt", "Maris Otter", "Golden Promise", "Heritage Malt", "Low Color Pale", "High Color Pale",
+            "Malt de blé", "Malt de blé clair", "Malt de blé foncé", "Malt de seigle", "Malt d’épeautre",
+            "Malt d’avoine", "Malt de triticale"
+        ],
+        "Malts Caramel / Crystal": [
+            "Caramel / Crystal", "Carapils / Dextrin Malt", "Crystal 10", "Crystal 20", "Crystal 30",
+            "Crystal 40", "Crystal 60", "Crystal 80", "Crystal 120", "Caramel Light", "Caramel Medium",
+            "Caramel Dark", "CaraAmber", "CaraRed", "CaraMunich I", "CaraMunich II", "CaraMunich III",
+            "CaraGold", "CaraHell", "CaraAroma", "Carawheat", "CaraRye", "CaraOat"
+        ],
+        "Malts Torréfiés / Foncés": [
+            "Chocolate Malt", "Dark Chocolate Malt", "Black Malt", "Black Patent", "Roasted Barley",
+            "Brown Malt", "Amber Malt", "Chocolate Wheat", "Roasted Wheat", "Chocolate Rye"
+        ],
+        "Malts Spéciaux / Techniques": [
+            "Acidulated Malt", "Melanoidin Malt", "Biscuit Malt", "Victory Malt", "Honey Malt",
+            "Special B", "Smoked Malt", "Peated Malt", "Diastatic Malt", "Malt enzymatique"
+        ],
+        "Malts Fumés": [
+            "Rauchmalz (hêtre)", "Smoked Beechwood", "Smoked Oak", "Smoked Cherrywood", "Smoked Peat", "Smoked Wheat"
+        ],
+        "Sans Gluten / Alternatifs": [
+            "Malt de sorgho", "Malt de millet", "Malt de riz", "Malt de maïs", "Malt de quinoa", "Malt de sarrasin"
+        ],
+        "Céréales Non Maltées": [
+            "Flocons d’avoine", "Flocons d’orge", "Flocons de blé", "Flocons de seigle", "Riz cru",
+            "Maïs", "Sucre de canne", "Sucre candi clair / foncé", "Miel", "Lactose"
+        ]
+    };
+
     // Initial Data
     let steps = [];
     if (typeof bscRecipeData !== 'undefined' && bscRecipeData.steps) {
@@ -107,22 +141,38 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
 
                         <div class="bsc-items-container">
-                            ${step.items.map((item, itemIndex) => `
-                                <div class="bsc-item-row">
-                                    <div class="bsc-item-icon">${getIngredientIcon(item.type)}</div>
-                                    <select class="bsc-item-select" onchange="bscUpdateItem(${index}, ${itemIndex}, 'type', this.value)">
-                                        <option value="Malt" ${item.type === 'Malt' ? 'selected' : ''}>Malt</option>
-                                        <option value="Hop" ${item.type === 'Hop' ? 'selected' : ''}>Houblon</option>
-                                        <option value="Yeast" ${item.type === 'Yeast' ? 'selected' : ''}>Levure</option>
-                                        <option value="Adjunct" ${item.type === 'Adjunct' ? 'selected' : ''}>Autre</option>
-                                        <option value="Technique" ${item.type === 'Technique' ? 'selected' : ''}>Technique</option>
-                                        <option value="Equipment" ${item.type === 'Equipment' ? 'selected' : ''}>Matériel</option>
-                                    </select>
-                                    <input type="text" class="bsc-item-input" value="${esc(item.name)}" placeholder="Nom" onchange="bscUpdateItem(${index}, ${itemIndex}, 'name', this.value)">
-                                    <input type="text" class="bsc-item-input" value="${esc(item.qty)}" placeholder="Qté" onchange="bscUpdateItem(${index}, ${itemIndex}, 'qty', this.value)">
-                                    <button type="button" class="bsc-btn-icon" onclick="bscRemoveItem(${index}, ${itemIndex})">&times;</button>
+                            ${step.items.map((item, itemIndex) => {
+                                const isMalt = item.type === 'Malt';
+                                return `
+                                <div class="bsc-item-wrapper ${isMalt ? 'bsc-item-malt-wrapper' : ''}">
+                                    <div class="bsc-item-row">
+                                        <div class="bsc-item-icon">${getIngredientIcon(item.type)}</div>
+                                        <select class="bsc-item-select" onchange="bscUpdateItem(${index}, ${itemIndex}, 'type', this.value)">
+                                            <option value="Malt" ${item.type === 'Malt' ? 'selected' : ''}>Malt</option>
+                                            <option value="Hop" ${item.type === 'Hop' ? 'selected' : ''}>Houblon</option>
+                                            <option value="Yeast" ${item.type === 'Yeast' ? 'selected' : ''}>Levure</option>
+                                            <option value="Adjunct" ${item.type === 'Adjunct' ? 'selected' : ''}>Autre</option>
+                                            <option value="Technique" ${item.type === 'Technique' ? 'selected' : ''}>Technique</option>
+                                            <option value="Equipment" ${item.type === 'Equipment' ? 'selected' : ''}>Matériel</option>
+                                        </select>
+
+                                        ${isMalt ? renderMaltSelect(item.name, index, itemIndex) : `
+                                        <input type="text" class="bsc-item-input" value="${esc(item.name)}" placeholder="Nom" onchange="bscUpdateItem(${index}, ${itemIndex}, 'name', this.value)">
+                                        `}
+
+                                        <input type="text" class="bsc-item-input" value="${esc(item.qty)}" placeholder="Qté (ex: 5kg)" onchange="bscUpdateItem(${index}, ${itemIndex}, 'qty', this.value)">
+                                        <button type="button" class="bsc-btn-icon" onclick="bscRemoveItem(${index}, ${itemIndex})">&times;</button>
+                                    </div>
+
+                                    ${isMalt ? `
+                                    <div class="bsc-item-details">
+                                        <input type="text" class="bsc-detail-input" placeholder="Fournisseur" value="${esc(item.supplier)}" onchange="bscUpdateItem(${index}, ${itemIndex}, 'supplier', this.value)">
+                                        <input type="number" class="bsc-detail-input" placeholder="EBC" value="${esc(item.ebc)}" onchange="bscUpdateItem(${index}, ${itemIndex}, 'ebc', this.value)">
+                                        <input type="number" class="bsc-detail-input" placeholder="Rendement %" value="${esc(item.yield)}" onchange="bscUpdateItem(${index}, ${itemIndex}, 'yield', this.value)">
+                                    </div>
+                                    ` : ''}
                                 </div>
-                            `).join('')}
+                            `;}).join('')}
                             <button type="button" class="bsc-btn-add-item" onclick="bscAddItem(${index})">+ Ajouter un élément</button>
                         </div>
                     </div>
@@ -135,6 +185,20 @@ document.addEventListener('DOMContentLoaded', function() {
         container.insertAdjacentHTML('beforeend', addBtn);
 
         updateHiddenInputs();
+    }
+
+    // Render Malt Select Helper
+    function renderMaltSelect(currentVal, stepIndex, itemIndex) {
+        let options = `<option value="">-- Choisir un Malt --</option>`;
+        for (const [category, items] of Object.entries(maltList)) {
+            options += `<optgroup label="${category}">`;
+            items.forEach(malt => {
+                const selected = malt === currentVal ? 'selected' : '';
+                options += `<option value="${malt}" ${selected}>${malt}</option>`;
+            });
+            options += `</optgroup>`;
+        }
+        return `<select class="bsc-item-input bsc-malt-select" onchange="bscUpdateItem(${stepIndex}, ${itemIndex}, 'name', this.value)">${options}</select>`;
     }
 
     // Helpers
@@ -210,7 +274,8 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     window.bscAddItem = function(stepIndex) {
-        steps[stepIndex].items.push({ type: 'Malt', name: '', qty: '' });
+        // Default new item
+        steps[stepIndex].items.push({ type: 'Malt', name: '', qty: '', ebc: '', supplier: '', yield: '' });
         render();
     };
 
@@ -221,7 +286,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
     window.bscUpdateItem = function(stepIndex, itemIndex, key, value) {
         steps[stepIndex].items[itemIndex][key] = value;
-        updateHiddenInputs();
+
+        // If changing type away from Malt, clear the malt specific fields? No need, just hide them.
+        // But if changing TO malt, they might be undefined, but render() handles that via esc() returning ''.
+
+        // Force re-render only if type changed (to switch input <-> select)
+        if (key === 'type') {
+            render();
+        } else {
+            // Optimization: Don't re-render whole tree for text input?
+            // Actually render() is safe but loses focus if we are not careful.
+            // But here we are using onchange (blur), so losing focus is fine.
+            updateHiddenInputs();
+        }
     };
 
     function updateHiddenInputs() {
@@ -238,10 +315,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 mash.push(`${step.title}: ${step.duration}min @ ${step.temp}°C`);
             }
             step.items.forEach(item => {
-                const line = `${item.name} (${item.qty})`;
-                if (item.type === 'Malt') malts.push(line);
+                let line = `${item.name} (${item.qty})`;
+
+                if (item.type === 'Malt') {
+                    const extras = [];
+                    if (item.supplier) extras.push(item.supplier);
+                    if (item.ebc) extras.push(`${item.ebc} EBC`);
+                    if (extras.length > 0) line += ` [${extras.join(', ')}]`;
+                    malts.push(line);
+                }
+
                 if (item.type === 'Hop') hops.push(line);
                 if (item.type === 'Equipment') equipment.push(line);
+
                 if (['Malt', 'Hop', 'Yeast', 'Adjunct'].includes(item.type)) {
                     ingredients.push(`${item.type}: ${line}`);
                 }

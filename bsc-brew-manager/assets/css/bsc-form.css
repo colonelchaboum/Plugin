@@ -355,3 +355,54 @@
 .bsc-remove-step:hover {
     color: #e74c3c;
 }
+
+/* === MALT SPECIFIC STYLES === */
+.bsc-item-malt-wrapper {
+    background: #fdfdfd;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    padding: 10px;
+    transition: background 0.2s;
+}
+
+.bsc-item-malt-wrapper:hover {
+    background: #f8f9fa;
+}
+
+/* Override standard row styles inside malt wrapper to prevent doubling */
+.bsc-item-malt-wrapper .bsc-item-row {
+    margin-bottom: 8px;
+    background: transparent;
+    padding: 0;
+    border: none;
+}
+
+.bsc-item-details {
+    display: flex;
+    gap: 10px;
+    padding-left: 65px; /* Align with content, skipping icon+select */
+    padding-right: 50px; /* Space for X button area */
+}
+
+.bsc-detail-input {
+    flex: 1;
+    padding: 6px 10px;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    font-size: 0.85em;
+    background: #fff;
+    color: #555;
+    font-family: var(--bsc-font-family);
+}
+
+.bsc-detail-input:focus {
+    border-color: #2271b1;
+    outline: none;
+}
+
+.bsc-malt-select {
+    cursor: pointer;
+    background-color: #fff;
+    font-weight: 600;
+}
