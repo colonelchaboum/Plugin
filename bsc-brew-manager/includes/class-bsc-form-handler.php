@@ -7,7 +7,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 class BSC_Form_Handler {
 
 	public function __construct() {
+		// Keep the shortcode for backward compatibility or direct use
 		add_shortcode( 'bsc_add_recipe', array( $this, 'render_form' ) );
+		// Listen for the generic submission hook (used by both Shortcode and Elementor Widget)
 		add_action( 'init', array( $this, 'handle_form_submission' ) );
 	}
 
@@ -18,77 +20,90 @@ class BSC_Form_Handler {
 
 		ob_start();
 		?>
-		<div class="bsc-recipe-form">
-			<form method="post" enctype="multipart/form-data">
-				<?php wp_nonce_field( 'bsc_add_recipe_action', 'bsc_add_recipe_nonce' ); ?>
+		<div class="bsc-submission-form-container">
+			<form id="bsc-recipe-form-shortcode" method="post" enctype="multipart/form-data">
+				<?php wp_nonce_field( 'bsc_new_recipe_action', 'bsc_new_recipe_nonce' ); ?>
+				<input type="hidden" name="action" value="bsc_submit_recipe">
 
 				<p>
-					<label for="bsc_title"><?php _e( 'Nom de la Bière', 'bsc-brew-manager' ); ?></label>
-					<input type="text" name="bsc_title" id="bsc_title" required class="widefat">
+					<label for="recipe_title"><?php _e( 'Nom de la Recette', 'bsc-brew-manager' ); ?> *</label><br>
+					<input type="text" id="recipe_title" name="recipe_title" required style="width:100%;">
 				</p>
 
-				<p>
-					<label for="bsc_description"><?php _e( 'Description / Histoire', 'bsc-brew-manager' ); ?></label>
-					<?php wp_editor( '', 'bsc_description', array( 'media_buttons' => false, 'textarea_rows' => 5 ) ); ?>
-				</p>
+				<div style="display:flex; gap:10px; margin-bottom:15px;">
+					<div style="flex:1;">
+						<label for="bsc_style"><?php _e( 'Style', 'bsc-brew-manager' ); ?></label><br>
+						<?php
+						wp_dropdown_categories( array(
+							'taxonomy' => 'bsc_style',
+							'name' => 'bsc_style',
+							'hide_empty' => false,
+							'show_option_none' => __( 'Sélectionner un style', 'bsc-brew-manager' ),
+							'style' => 'width:100%;',
+						) );
+						?>
+					</div>
+					<div style="flex:1;">
+						<label for="bsc_level"><?php _e( 'Niveau', 'bsc-brew-manager' ); ?></label><br>
+						<?php
+						wp_dropdown_categories( array(
+							'taxonomy' => 'bsc_level',
+							'name' => 'bsc_level',
+							'hide_empty' => false,
+							'show_option_none' => __( 'Sélectionner un niveau', 'bsc-brew-manager' ),
+							'style' => 'width:100%;',
+						) );
+						?>
+					</div>
+				</div>
 
-				<h3><?php _e( 'Détails techniques', 'bsc-brew-manager' ); ?></h3>
-
-				<div class="bsc-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-					<p>
-						<label><?php _e( 'Volume (L)', 'bsc-brew-manager' ); ?></label>
-						<input type="number" step="0.1" name="bsc_batch_volume">
-					</p>
-					<p>
-						<label><?php _e( 'ABV (%)', 'bsc-brew-manager' ); ?></label>
-						<input type="number" step="0.1" name="bsc_abv">
-					</p>
-					<p>
-						<label><?php _e( 'Couleur (EBC)', 'bsc-brew-manager' ); ?></label>
-						<input type="text" name="bsc_color">
-					</p>
-					<p>
-						<label><?php _e( 'Temps d\'ébullition (min)', 'bsc-brew-manager' ); ?></label>
-						<input type="number" name="bsc_boil_time">
-					</p>
-					<p>
-						<label><?php _e( 'Temp. Fermentation (°C)', 'bsc-brew-manager' ); ?></label>
-						<input type="text" name="bsc_fermentation_temp">
-					</p>
+				<div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap:10px; margin-bottom:15px;">
+					<div><label>Volume (L)</label><br><input type="text" name="bsc_batch_volume" style="width:100%;"></div>
+					<div><label>OG</label><br><input type="text" name="bsc_og" style="width:100%;"></div>
+					<div><label>FG</label><br><input type="text" name="bsc_fg" style="width:100%;"></div>
+					<div><label>ABV (%)</label><br><input type="text" name="bsc_abv" style="width:100%;"></div>
+					<div><label>IBU</label><br><input type="text" name="bsc_ibu" style="width:100%;"></div>
 				</div>
 
 				<p>
-					<label><?php _e( 'Ingrédients (Malt, Houblon, Levure)', 'bsc-brew-manager' ); ?></label>
-					<textarea name="bsc_ingredients_list" rows="5" class="widefat" placeholder="<?php _e('Lister les ingrédients et quantités...', 'bsc-brew-manager'); ?>"></textarea>
+					<label><?php _e( 'Méthode', 'bsc-brew-manager' ); ?></label><br>
+					<select name="bsc_method" style="width:100%;">
+						<option value="All Grain">Tout Grain</option>
+						<option value="BIAB">BIAB</option>
+						<option value="Extract">Extrait</option>
+						<option value="Partial Mash">Partiel</option>
+					</select>
+				</p>
+
+				<div style="margin-bottom:15px; border:1px solid #ddd; padding:10px;">
+					<label><strong><?php _e( 'Ingrédients', 'bsc-brew-manager' ); ?></strong></label>
+					<div id="bsc-ingredients-wrapper-sc">
+						<div class="bsc-ingredient-row" style="display:flex; gap:5px; margin-bottom:5px;">
+							<input type="text" name="ing_name[]" placeholder="Nom" style="flex:2;">
+							<input type="text" name="ing_qty[]" placeholder="Qté" style="flex:1;">
+							<select name="ing_type[]" style="flex:1;">
+								<option value="Malt">Malt</option>
+								<option value="Houblon">Houblon</option>
+								<option value="Levure">Levure</option>
+								<option value="Autre">Autre</option>
+							</select>
+						</div>
+					</div>
+					<button type="button" onclick="var w=document.getElementById('bsc-ingredients-wrapper-sc'); var r=w.firstElementChild.cloneNode(true); r.querySelectorAll('input').forEach(i=>i.value=''); w.appendChild(r);"><?php _e( '+', 'bsc-brew-manager' ); ?></button>
+				</div>
+
+				<p>
+					<label><?php _e( 'Instructions', 'bsc-brew-manager' ); ?></label><br>
+					<textarea name="bsc_mash_schedule" rows="5" style="width:100%;"></textarea>
 				</p>
 
 				<p>
-					<label><?php _e( 'Processus / Paliers', 'bsc-brew-manager' ); ?></label>
-					<textarea name="bsc_mash_schedule" rows="5" class="widefat" placeholder="<?php _e('Détails du brassage...', 'bsc-brew-manager'); ?>"></textarea>
+					<label><?php _e( 'Photo', 'bsc-brew-manager' ); ?></label><br>
+					<input type="file" name="bsc_recipe_image" accept="image/*">
 				</p>
 
 				<p>
-					<label><?php _e( 'Matériel utilisé', 'bsc-brew-manager' ); ?></label>
-					<textarea name="bsc_equipment" rows="3" class="widefat" placeholder="<?php _e('Marque, Cuve, etc...', 'bsc-brew-manager'); ?>"></textarea>
-				</p>
-
-				<p>
-					<label><?php _e( 'Notes de dégustation (Goût)', 'bsc-brew-manager' ); ?></label>
-					<textarea name="bsc_taste_notes" rows="3" class="widefat"></textarea>
-				</p>
-
-				<h3><?php _e( 'Photos', 'bsc-brew-manager' ); ?></h3>
-				<p>
-					<label><?php _e( 'Photo de la Bière', 'bsc-brew-manager' ); ?></label>
-					<input type="file" name="bsc_beer_image" accept="image/*">
-				</p>
-				<p>
-					<label><?php _e( 'Photo de l\'étiquette', 'bsc-brew-manager' ); ?></label>
-					<input type="file" name="bsc_label_image" accept="image/*">
-				</p>
-
-				<p>
-					<input type="submit" name="bsc_submit_recipe" value="<?php _e( 'Enregistrer la recette', 'bsc-brew-manager' ); ?>" class="button button-primary">
+					<button type="submit" class="button button-primary"><?php _e( 'Publier', 'bsc-brew-manager' ); ?></button>
 				</p>
 			</form>
 		</div>
@@ -97,39 +112,94 @@ class BSC_Form_Handler {
 	}
 
 	public function handle_form_submission() {
-		if ( ! isset( $_POST['bsc_submit_recipe'] ) ) {
-			return;
+        // Check for our custom action trigger (from Elementor widget or Shortcode)
+		if ( ! isset( $_POST['action'] ) || $_POST['action'] !== 'bsc_submit_recipe' ) {
+            // Also check legacy check
+            if ( ! isset( $_POST['bsc_submit_recipe'] ) ) {
+			    return;
+            }
 		}
 
 		if ( ! is_user_logged_in() ) {
 			return;
 		}
 
-		if ( ! isset( $_POST['bsc_add_recipe_nonce'] ) || ! wp_verify_nonce( $_POST['bsc_add_recipe_nonce'], 'bsc_add_recipe_action' ) ) {
+        // Verify Nonce (Check both new and old nonce names for compatibility)
+        $nonce_valid = false;
+        if ( isset( $_POST['bsc_new_recipe_nonce'] ) && wp_verify_nonce( $_POST['bsc_new_recipe_nonce'], 'bsc_new_recipe_action' ) ) {
+            $nonce_valid = true;
+        } elseif ( isset( $_POST['bsc_add_recipe_nonce'] ) && wp_verify_nonce( $_POST['bsc_add_recipe_nonce'], 'bsc_add_recipe_action' ) ) {
+            $nonce_valid = true;
+        }
+
+		if ( ! $nonce_valid ) {
+			return; // Invalid security token
+		}
+
+        // --- Data Processing ---
+
+		// Check for Deletion
+		if ( isset( $_POST['bsc_delete_recipe'] ) && ! empty( $_POST['bsc_delete_recipe'] ) ) {
+			$delete_id = intval( $_POST['bsc_delete_recipe'] );
+			$post = get_post( $delete_id );
+			if ( $post && $post->post_type === 'bsc_recipe' && intval( $post->post_author ) === get_current_user_id() ) {
+				wp_delete_post( $delete_id, true );
+				// Redirect to profile or home
+				wp_redirect( home_url() );
+				exit;
+			}
 			return;
 		}
 
-		$title = sanitize_text_field( $_POST['bsc_title'] );
-		$content = wp_kses_post( $_POST['bsc_description'] );
+		$edit_id = isset( $_POST['edit_post_id'] ) ? intval( $_POST['edit_post_id'] ) : 0;
+		$title = isset($_POST['recipe_title']) ? sanitize_text_field( $_POST['recipe_title'] ) : ( isset($_POST['bsc_title']) ? sanitize_text_field($_POST['bsc_title']) : 'Untitled' );
 
-		$post_id = wp_insert_post( array(
+        // Content/Description might not be in the Elementor form?
+        // Let's check if 'bsc_description' or maybe just empty content
+        $content = isset($_POST['bsc_description']) ? wp_kses_post( $_POST['bsc_description'] ) : '';
+
+		$post_status = isset($_POST['post_status']) ? sanitize_text_field($_POST['post_status']) : 'publish';
+
+		$post_args = array(
 			'post_title'   => $title,
 			'post_content' => $content,
-			'post_status'  => 'publish', // Or 'pending' if review is needed
+			'post_status'  => $post_status,
 			'post_type'    => 'bsc_recipe',
 			'post_author'  => get_current_user_id(),
-		) );
+		);
+
+		if ( $edit_id > 0 ) {
+			// Update Existing
+			$existing_post = get_post( $edit_id );
+			if ( $existing_post && intval( $existing_post->post_author ) === get_current_user_id() ) {
+				$post_args['ID'] = $edit_id;
+				$post_id = wp_update_post( $post_args );
+			} else {
+				return; // Unauthorized
+			}
+		} else {
+			// Create New
+			$post_id = wp_insert_post( $post_args );
+		}
 
 		if ( is_wp_error( $post_id ) ) {
-			// Handle error - ideally show a message to user
 			return;
 		}
 
-		// Save Meta
+		// Save Meta Fields
 		$fields = array(
-			'bsc_batch_volume', 'bsc_abv', 'bsc_color', 'bsc_boil_time',
-			'bsc_fermentation_temp', 'bsc_ingredients_list', 'bsc_mash_schedule',
-			'bsc_equipment', 'bsc_taste_notes'
+			'bsc_batch_volume',
+            'bsc_og',
+            'bsc_fg',
+            'bsc_abv',
+            'bsc_ibu',
+            'bsc_color',
+            'bsc_boil_time',
+			'bsc_fermentation_temp',
+            'bsc_method',
+            'bsc_mash_schedule',
+			'bsc_equipment',
+            'bsc_taste_notes'
 		);
 
 		foreach ( $fields as $field ) {
@@ -138,20 +208,54 @@ class BSC_Form_Handler {
 			}
 		}
 
+        // Handle Ingredients (Construct JSON from dynamic fields if present)
+        if ( isset($_POST['ing_name']) && is_array($_POST['ing_name']) ) {
+            $ingredients = array();
+            $names = $_POST['ing_name'];
+            $qtys = $_POST['ing_qty'];
+            $types = $_POST['ing_type'];
+
+            for ( $i = 0; $i < count($names); $i++ ) {
+                if ( ! empty( $names[$i] ) ) {
+                    $ingredients[] = array(
+                        'name' => sanitize_text_field( $names[$i] ),
+                        'qty'  => sanitize_text_field( $qtys[$i] ),
+                        'type' => sanitize_text_field( $types[$i] ),
+                    );
+                }
+            }
+            update_post_meta( $post_id, 'bsc_ingredients_list', json_encode( $ingredients, JSON_UNESCAPED_UNICODE ) );
+        } elseif ( isset( $_POST['bsc_ingredients_list'] ) ) {
+            // Legacy Textarea fallback
+            update_post_meta( $post_id, 'bsc_ingredients_list', sanitize_textarea_field( $_POST['bsc_ingredients_list'] ) );
+        }
+
+        // Handle Taxonomies (Style and Level)
+        if ( isset( $_POST['bsc_style'] ) && $_POST['bsc_style'] != '-1' ) {
+            wp_set_object_terms( $post_id, intval( $_POST['bsc_style'] ), 'bsc_style' );
+        }
+        if ( isset( $_POST['bsc_level'] ) && $_POST['bsc_level'] != '-1' ) {
+            wp_set_object_terms( $post_id, intval( $_POST['bsc_level'] ), 'bsc_level' );
+        }
+
+
 		// Handle File Uploads
 		require_once( ABSPATH . 'wp-admin/includes/image.php' );
 		require_once( ABSPATH . 'wp-admin/includes/file.php' );
 		require_once( ABSPATH . 'wp-admin/includes/media.php' );
 
 		// Beer Image (Featured)
-		if ( ! empty( $_FILES['bsc_beer_image']['name'] ) ) {
-			$attachment_id = media_handle_upload( 'bsc_beer_image', $post_id );
+        // Check both potential input names
+        $image_input_name = isset($_FILES['bsc_recipe_image']) ? 'bsc_recipe_image' : 'bsc_beer_image';
+
+		if ( ! empty( $_FILES[$image_input_name]['name'] ) ) {
+			$attachment_id = media_handle_upload( $image_input_name, $post_id );
 			if ( ! is_wp_error( $attachment_id ) ) {
 				set_post_thumbnail( $post_id, $attachment_id );
 			}
 		}
 
-		// Label Image
+		// Label Image (If used)
 		if ( ! empty( $_FILES['bsc_label_image']['name'] ) ) {
 			$attachment_id = media_handle_upload( 'bsc_label_image', $post_id );
 			if ( ! is_wp_error( $attachment_id ) ) {
@@ -159,8 +263,13 @@ class BSC_Form_Handler {
 			}
 		}
 
-		// Redirect to the new post
-		wp_redirect( get_permalink( $post_id ) );
-		exit;
+		// Redirect
+        if ( isset( $_POST['redirect_to'] ) && ! empty( $_POST['redirect_to'] ) ) {
+            wp_redirect( esc_url( $_POST['redirect_to'] ) );
+            exit;
+        } else {
+            wp_redirect( get_permalink( $post_id ) );
+            exit;
+        }
 	}
 }

@@ -25,49 +25,58 @@ class BSC_Meta {
 	public function render_meta_box( $post ) {
 		wp_nonce_field( 'bsc_save_recipe_data', 'bsc_recipe_nonce' );
 
+		// Standard numeric/text fields
 		$fields = array(
 			'bsc_batch_volume'      => __( 'Volume Brassé (L)', 'bsc-brew-manager' ),
-			'bsc_abv'               => __( 'Degrés d\'alcool (%)', 'bsc-brew-manager' ),
+			'bsc_og'                => __( 'OG (Densité Initiale)', 'bsc-brew-manager' ),
+			'bsc_fg'                => __( 'FG (Densité Finale)', 'bsc-brew-manager' ),
+			'bsc_abv'               => __( 'ABV (%)', 'bsc-brew-manager' ),
+			'bsc_ibu'               => __( 'IBU (Amertume)', 'bsc-brew-manager' ),
 			'bsc_color'             => __( 'Couleur (EBC/SRM)', 'bsc-brew-manager' ),
 			'bsc_boil_time'         => __( 'Temps d\'ébullition (min)', 'bsc-brew-manager' ),
 			'bsc_fermentation_temp' => __( 'Température de fermentation (°C)', 'bsc-brew-manager' ),
+			'bsc_method'            => __( 'Méthode (Tout Grain, BIAB, etc)', 'bsc-brew-manager' ),
 		);
 
+		// Complex text areas
 		$textareas = array(
-			'bsc_ingredients_list' => __( 'Liste des Ingrédients', 'bsc-brew-manager' ),
-			'bsc_mash_schedule'    => __( 'Processus / Paliers de Température (Durée, Température)', 'bsc-brew-manager' ),
-			'bsc_equipment'        => __( 'Matériel utilisé (Marque, Type)', 'bsc-brew-manager' ),
-			'bsc_taste_notes'      => __( 'Goût / Notes de dégustation', 'bsc-brew-manager' ),
+			'bsc_ingredients_list' => __( 'Ingrédients (Format JSON pour frontend, texte libre ici)', 'bsc-brew-manager' ),
+			'bsc_mash_schedule'    => __( 'Étapes de Brassage / Paliers', 'bsc-brew-manager' ),
+			'bsc_equipment'        => __( 'Matériel utilisé', 'bsc-brew-manager' ),
+			'bsc_taste_notes'      => __( 'Notes de dégustation', 'bsc-brew-manager' ),
 		);
 
-		echo '<div class="bsc-meta-box">';
+		echo '<div class="bsc-meta-box" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">';
 
-		// Simple Inputs
+		// Column 1: Metrics
+		echo '<div><h3>' . __( 'Métriques', 'bsc-brew-manager' ) . '</h3>';
 		foreach ( $fields as $key => $label ) {
 			$value = get_post_meta( $post->ID, $key, true );
-			echo '<p><label for="' . esc_attr( $key ) . '">' . esc_html( $label ) . '</label><br />';
+			echo '<p><label for="' . esc_attr( $key ) . '"><strong>' . esc_html( $label ) . '</strong></label><br />';
 			echo '<input type="text" id="' . esc_attr( $key ) . '" name="' . esc_attr( $key ) . '" value="' . esc_attr( $value ) . '" style="width:100%;" /></p>';
 		}
+		echo '</div>';
 
-		// Textareas
+		// Column 2: Details & Textareas
+		echo '<div><h3>' . __( 'Détails & Processus', 'bsc-brew-manager' ) . '</h3>';
 		foreach ( $textareas as $key => $label ) {
 			$value = get_post_meta( $post->ID, $key, true );
-			echo '<p><label for="' . esc_attr( $key ) . '">' . esc_html( $label ) . '</label><br />';
-			echo '<textarea id="' . esc_attr( $key ) . '" name="' . esc_attr( $key ) . '" rows="5" style="width:100%;">' . esc_textarea( $value ) . '</textarea></p>';
+			echo '<p><label for="' . esc_attr( $key ) . '"><strong>' . esc_html( $label ) . '</strong></label><br />';
+			echo '<textarea id="' . esc_attr( $key ) . '" name="' . esc_attr( $key ) . '" rows="4" style="width:100%;">' . esc_textarea( $value ) . '</textarea></p>';
 		}
 
-		// Image Label Handling (Simple version for now, assume ID or URL)
-		// Ideally we use the WP Media Uploader JS here, but for brevity in this task,
-		// I will create a basic input for Image URL or ID. The frontend will handle upload.
-		// For the admin, let's just show an ID field or URL field for now.
+		// Image ID
 		$label_img_id = get_post_meta( $post->ID, 'bsc_label_image_id', true );
-		echo '<p><label for="bsc_label_image_id">' . __( 'ID Image de l\'étiquette (Upload via Frontend)', 'bsc-brew-manager' ) . '</label><br />';
-		echo '<input type="number" id="bsc_label_image_id" name="bsc_label_image_id" value="' . esc_attr( $label_img_id ) . '" /></p>';
+		echo '<p><label for="bsc_label_image_id"><strong>' . __( 'ID Image (Label)', 'bsc-brew-manager' ) . '</strong></label><br />';
+		echo '<input type="number" id="bsc_label_image_id" name="bsc_label_image_id" value="' . esc_attr( $label_img_id ) . '" style="width:100px;" />';
 		if ( $label_img_id ) {
-			echo wp_get_attachment_image( $label_img_id, 'thumbnail' );
+			echo '<br>' . wp_get_attachment_image( $label_img_id, 'thumbnail' );
 		}
+		echo '</p>';
 
-		echo '</div>';
+		echo '</div>'; // End Col 2
+
+		echo '</div>'; // End Grid
 	}
 
 	public function save_meta_boxes( $post_id ) {
@@ -85,10 +94,14 @@ class BSC_Meta {
 
 		$fields = array(
 			'bsc_batch_volume',
+			'bsc_og',
+			'bsc_fg',
 			'bsc_abv',
+			'bsc_ibu',
 			'bsc_color',
 			'bsc_boil_time',
 			'bsc_fermentation_temp',
+			'bsc_method',
 			'bsc_ingredients_list',
 			'bsc_mash_schedule',
 			'bsc_equipment',

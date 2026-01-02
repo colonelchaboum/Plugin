@@ -33,6 +33,8 @@ class BSC_Brew_Manager {
 	}
 
 	private function load_dependencies() {
+		require_once BSC_BREW_MANAGER_PATH . 'includes/class-bsc-taxonomies.php';
+		new BSC_Taxonomies();
 		require_once BSC_BREW_MANAGER_PATH . 'includes/class-bsc-meta.php';
 		new BSC_Meta();
 		require_once BSC_BREW_MANAGER_PATH . 'includes/class-bsc-form-handler.php';
@@ -41,6 +43,13 @@ class BSC_Brew_Manager {
 		new BSC_Frontend_Display();
 		require_once BSC_BREW_MANAGER_PATH . 'includes/class-bsc-reviews.php';
 		new BSC_Reviews();
+
+		add_action( 'elementor/init', array( $this, 'load_elementor_support' ) );
+	}
+
+	public function load_elementor_support() {
+		require_once BSC_BREW_MANAGER_PATH . 'includes/elementor/class-bsc-elementor.php';
+		new BSC_Elementor();
 	}
 
 	public function register_cpt() {

@@ -58,6 +58,42 @@ class BSC_Reviews {
 				add_comment_meta( $comment_id, $field, $val );
 			}
 		}
+
+		// Calculate and update average rating for the post
+		$comment = get_comment( $comment_id );
+		$post_id = $comment->comment_post_ID;
+		$this->update_post_average( $post_id );
+	}
+
+	public function update_post_average( $post_id ) {
+		$args = array(
+			'post_id' => $post_id,
+			'status'  => 'approve',
+			'meta_key' => 'bsc_rating_overall', // Ensure we only count comments with ratings
+		);
+		$comments = get_comments( $args );
+
+		if ( empty( $comments ) ) {
+			update_post_meta( $post_id, 'bsc_average_rating', 0 );
+			update_post_meta( $post_id, 'bsc_vote_count', 0 );
+			return;
+		}
+
+		$total = 0;
+		$count = 0;
+		foreach ( $comments as $comment ) {
+			$rating = get_comment_meta( $comment->comment_ID, 'bsc_rating_overall', true );
+			if ( $rating ) {
+				$total += intval( $rating );
+				$count++;
+			}
+		}
+
+		if ( $count > 0 ) {
+			$avg = round( $total / $count, 2 );
+			update_post_meta( $post_id, 'bsc_average_rating', $avg );
+			update_post_meta( $post_id, 'bsc_vote_count', $count );
+		}
 	}
 
 	public function display_rating( $comment_text ) {
