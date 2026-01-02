@@ -161,6 +161,9 @@ class BSC_Frontend_Display {
 
 		$post_id = get_the_ID();
 
+		// Enqueue our CSS
+		wp_enqueue_style( 'bsc-form-css', BSC_BREW_MANAGER_URL . 'assets/css/bsc-form.css', array(), '1.1' );
+
 		// Retrieve Meta
 		$meta_fields = array(
 			'Volume' => array( 'key' => 'bsc_batch_volume', 'unit' => 'L' ),
@@ -183,31 +186,118 @@ class BSC_Frontend_Display {
 			</ul>
 
 			<?php
-			$ingredients = get_post_meta( $post_id, 'bsc_ingredients_list', true );
-			if ( $ingredients ) : ?>
-				<div class="bsc-section">
-					<h4><?php _e( 'Ingrédients', 'bsc-brew-manager' ); ?></h4>
-					<div class="bsc-content"><?php echo wpautop( esc_html( $ingredients ) ); ?></div>
-				</div>
-			<?php endif; ?>
+			// Try to get structured JSON first
+			$steps_json = get_post_meta( $post_id, 'bsc_recipe_steps', true );
+			$steps = $steps_json ? json_decode( $steps_json, true ) : null;
 
-			<?php
-			$mash = get_post_meta( $post_id, 'bsc_mash_schedule', true );
-			if ( $mash ) : ?>
-				<div class="bsc-section">
-					<h4><?php _e( 'Processus / Paliers', 'bsc-brew-manager' ); ?></h4>
-					<div class="bsc-content"><?php echo wpautop( esc_html( $mash ) ); ?></div>
-				</div>
-			<?php endif; ?>
+			if ( $steps && is_array( $steps ) ) :
+			?>
+				<div class="bsc-section bsc-recipe-builder">
+					<h4><?php _e( 'Processus de Brassage', 'bsc-brew-manager' ); ?></h4>
+					<div id="bsc-recipe-builder-container">
+						<?php foreach ( $steps as $step ) :
+							$type = isset($step['type']) ? $step['type'] : 'prep';
+							$icon = '⚙️';
+							switch($type) {
+								case 'mash': $icon = '🌾'; break;
+								case 'boil': $icon = '🔥'; break;
+								case 'ferment': $icon = '⚗️'; break;
+								case 'package': $icon = '📦'; break;
+							}
+						?>
+							<div class="bsc-step-card bsc-type-<?php echo esc_attr($type); ?>">
+								<!-- Visual Connector -->
+								<div class="bsc-timeline-connector"></div>
+								<div class="bsc-step-icon"><?php echo $icon; ?></div>
 
-			<?php
-			$equip = get_post_meta( $post_id, 'bsc_equipment', true );
-			if ( $equip ) : ?>
-				<div class="bsc-section">
-					<h4><?php _e( 'Matériel', 'bsc-brew-manager' ); ?></h4>
-					<div class="bsc-content"><?php echo wpautop( esc_html( $equip ) ); ?></div>
+								<div class="bsc-step-header">
+									<div class="bsc-header-row">
+										<span class="bsc-step-type-select" style="border:none; background:transparent;">
+											<?php
+												// Map type to label
+												$labels = [
+													'prep' => 'Préparation',
+													'mash' => 'Empâtage',
+													'boil' => 'Ébullition',
+													'ferment' => 'Fermentation',
+													'package' => 'Conditionnement'
+												];
+												echo isset($labels[$type]) ? $labels[$type] : 'Étape';
+											?>
+										</span>
+										<strong class="bsc-step-title-input"><?php echo esc_html( $step['title'] ); ?></strong>
+									</div>
+
+									<div class="bsc-step-metrics">
+										<?php if ( ! empty( $step['duration'] ) ) : ?>
+										<div class="bsc-metric">
+											<span class="bsc-metric-label">Durée</span>
+											<div class="bsc-metric-input-wrapper">
+												<span class="bsc-metric-input"><?php echo esc_html( $step['duration'] ); ?></span>
+												<span class="bsc-metric-unit">min</span>
+											</div>
+										</div>
+										<?php endif; ?>
+
+										<?php if ( ! empty( $step['temp'] ) ) : ?>
+										<div class="bsc-metric">
+											<span class="bsc-metric-label">Temp</span>
+											<div class="bsc-metric-input-wrapper">
+												<span class="bsc-metric-input"><?php echo esc_html( $step['temp'] ); ?></span>
+												<span class="bsc-metric-unit">°C</span>
+											</div>
+										</div>
+										<?php endif; ?>
+									</div>
+								</div>
+
+								<div class="bsc-items-container">
+									<?php if ( ! empty( $step['items'] ) ) : ?>
+										<?php foreach ( $step['items'] as $item ) : ?>
+											<div class="bsc-item-row" style="grid-template-columns: 100px 1fr 1fr;">
+												<span class="bsc-item-select" style="border:none; background:#f9f9f9;"><?php echo esc_html( $item['type'] ); ?></span>
+												<span class="bsc-item-input" style="border:none; font-weight:bold;"><?php echo esc_html( $item['name'] ); ?></span>
+												<span class="bsc-item-input" style="border:none;"><?php echo esc_html( $item['qty'] ); ?></span>
+											</div>
+										<?php endforeach; ?>
+									<?php else : ?>
+										<p style="color:#999; font-style:italic; padding:10px;"><?php _e('Aucun ingrédient/équipement.', 'bsc-brew-manager'); ?></p>
+									<?php endif; ?>
+								</div>
+							</div>
+						<?php endforeach; ?>
+					</div>
 				</div>
-			<?php endif; ?>
+			<?php else : ?>
+				<!-- Fallback to Legacy Text Blobs if no JSON steps -->
+				<?php
+				$ingredients = get_post_meta( $post_id, 'bsc_ingredients_list', true );
+				if ( $ingredients ) : ?>
+					<div class="bsc-section">
+						<h4><?php _e( 'Ingrédients', 'bsc-brew-manager' ); ?></h4>
+						<div class="bsc-content"><?php echo wpautop( esc_html( $ingredients ) ); ?></div>
+					</div>
+				<?php endif; ?>
+
+				<?php
+				$mash = get_post_meta( $post_id, 'bsc_mash_schedule', true );
+				if ( $mash ) : ?>
+					<div class="bsc-section">
+						<h4><?php _e( 'Processus / Paliers', 'bsc-brew-manager' ); ?></h4>
+						<div class="bsc-content"><?php echo wpautop( esc_html( $mash ) ); ?></div>
+					</div>
+				<?php endif; ?>
+
+				<?php
+				$equip = get_post_meta( $post_id, 'bsc_equipment', true );
+				if ( $equip ) : ?>
+					<div class="bsc-section">
+						<h4><?php _e( 'Matériel', 'bsc-brew-manager' ); ?></h4>
+						<div class="bsc-content"><?php echo wpautop( esc_html( $equip ) ); ?></div>
+					</div>
+				<?php endif; ?>
+
+			<?php endif; // End JSON check ?>
 
 			<?php
 			$taste = get_post_meta( $post_id, 'bsc_taste_notes', true );
