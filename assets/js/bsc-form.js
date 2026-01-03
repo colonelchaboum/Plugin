@@ -342,7 +342,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
                                 </div>
                             `;}).join('')}
-                            <button type="button" class="bsc-btn-add-item" onclick="bscAddItem(${index})">+ Ajouter un élément</button>
+
+                            <div class="bsc-item-toolbar">
+                                <button type="button" class="bsc-btn-add bsc-add-malt" onclick="bscAddItem(${index}, 'Malt')">🌾 Malt</button>
+                                <button type="button" class="bsc-btn-add bsc-add-hop" onclick="bscAddItem(${index}, 'Hop')">🌿 Houblon</button>
+                                <button type="button" class="bsc-btn-add bsc-add-yeast" onclick="bscAddItem(${index}, 'Yeast')">🦠 Levure</button>
+                                <button type="button" class="bsc-btn-add bsc-add-equip" onclick="bscAddItem(${index}, 'Equipment')">⚙️ Matériel</button>
+                                <button type="button" class="bsc-btn-add bsc-add-other" onclick="bscAddItem(${index}, 'Adjunct')">🔹 Autre</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -500,9 +507,26 @@ document.addEventListener('DOMContentLoaded', function() {
         render();
     };
 
-    window.bscAddItem = function(stepIndex) {
-        // Default new item
-        steps[stepIndex].items.push({ type: 'Malt', name: '', qty: '', ebc: '', supplier: '', yield: '' });
+    window.bscAddItem = function(stepIndex, type) {
+        // Default to Malt if no type provided
+        if (!type) type = 'Malt';
+
+        let newItem = { type: type, name: '', qty: '' };
+
+        // Initialize fields based on type to prevent render errors or undefined states
+        if (type === 'Malt') {
+            newItem.ebc = ''; newItem.supplier = ''; newItem.yield = '';
+        } else if (type === 'Hop') {
+            newItem.alpha = ''; newItem.form = ''; newItem.year = ''; newItem.origin = ''; newItem.aromas = [];
+        } else if (type === 'Yeast') {
+            newItem.brand = ''; newItem.form = ''; newItem.attenuation = ''; newItem.temp_opt = '';
+        } else if (type === 'Equipment') {
+            newItem.brand = ''; // Used for Notes
+        } else {
+            newItem.type = 'Adjunct'; // 'Autre'
+        }
+
+        steps[stepIndex].items.push(newItem);
         render();
     };
 
@@ -514,7 +538,7 @@ document.addEventListener('DOMContentLoaded', function() {
     window.bscUpdateItem = function(stepIndex, itemIndex, key, value) {
         steps[stepIndex].items[itemIndex][key] = value;
 
-        // Init fields for Hop/Yeast
+        // Init fields for Hop/Yeast if type changes dynamically
         if (key === 'type' && value === 'Hop') {
              if (!steps[stepIndex].items[itemIndex].aromas) steps[stepIndex].items[itemIndex].aromas = [];
              render();
