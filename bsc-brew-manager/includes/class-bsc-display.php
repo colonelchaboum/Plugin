@@ -424,6 +424,19 @@ class BSC_Frontend_Display {
 												?>
 											</div>
 										<?php endif; ?>
+										<?php if ( $item['type'] === 'Yeast' && ( ! empty($item['brand']) || ! empty($item['form']) || ! empty($item['attenuation']) || ! empty($item['temp_opt']) ) ) : ?>
+											<div class="bsc-item-details" style="font-size:0.85em; color:#d35400; padding-left: 65px; margin-top:-5px; margin-bottom:10px;">
+												<?php
+													$details = [];
+													if( ! empty($item['brand']) ) $details[] = '🏷️ ' . esc_html($item['brand']);
+													if( ! empty($item['form']) ) $details[] = '📦 ' . esc_html($item['form']);
+													if( ! empty($item['attenuation']) ) $details[] = '📉 ' . esc_html($item['attenuation']) . '% Att.';
+													if( ! empty($item['temp_opt']) ) $details[] = '🌡️ ' . esc_html($item['temp_opt']);
+
+													echo implode(' &nbsp;&bull;&nbsp; ', $details);
+												?>
+											</div>
+										<?php endif; ?>
 									<?php endforeach; ?>
 								<?php endif; ?>
 							</div>

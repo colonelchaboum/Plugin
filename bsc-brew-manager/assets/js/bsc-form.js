@@ -85,6 +85,45 @@ document.addEventListener('DOMContentLoaded', function() {
         "Épicé", "Herbacé", "Terreux", "Vin blanc", "Noix de coco", "Fruits rouges"
     ];
 
+    // Yeast Data
+    const yeastList = {
+        "Levures Ale": [
+            "US-05 (Chico)", "California Ale", "American West Coast Ale", "BRY-97", "Nottingham Ale", "SafAle S-04",
+            "London Ale", "London Ale III", "British Ale", "Irish Ale",
+            "Belgian Abbey", "Belgian Strong Ale", "Belgian Ardennes", "Trappist Ale", "Belgian Saison", "Belgian Witbier", "Belgian Blonde", "Belgian Dark Ale",
+            "Bière de Garde", "Biere de Mars", "Farmhouse Ale"
+        ],
+        "Levures Lager": [
+            "German Lager", "Bavarian Lager", "Munich Lager", "Oktoberfest Lager", "Märzen Lager", "Bock Lager", "Doppelbock Lager", "Schwarzbier Lager", "Helles Lager",
+            "Bohemian Lager", "Czech Pilsner", "Pilsner Lager", "Vienna Lager", "Export Lager",
+            "American Lager", "American Light Lager", "Pre-Prohibition Lager"
+        ],
+        "Levures Saison & Farmhouse": [
+            "Saison Dupont-style", "French Saison", "Rustic Ale"
+        ],
+        "Levures Blé / Wheat": [
+            "German Wheat", "Bavarian Weizen", "Hefeweizen", "Dunkelweizen", "Weizenbock",
+            "Witbier", "Belgian Wheat", "White Ale"
+        ],
+        "Levures Acides & Sauvages": [
+            "Brettanomyces bruxellensis", "Brettanomyces lambicus", "Brettanomyces claussenii", "Brettanomyces anomalus",
+            "Lactobacillus", "Pediococcus", "Oenococcus",
+            "Lambic Blend", "Gueuze Blend", "Berliner Weisse Blend"
+        ],
+        "Levures Kveik": [
+            "Voss Kveik", "Hornindal Kveik", "Lutra Kveik", "Ebbegarden Kveik", "Skare Kveik"
+        ],
+        "Levures Hybrides": [
+            "Kölsch", "Altbier", "California Common (Steam)", "Cream Ale"
+        ],
+        "Levures Spécifiques": [
+            "Rice Lager Yeast", "Cider Yeast", "Mead Yeast", "Wine Yeast"
+        ]
+    };
+
+    const yeastForms = ["Sèche", "Liquide", "Culture maison", "Réensemencement"];
+    const yeastBrands = ["Fermentis", "Lallemand", "Mangrove Jack’s", "White Labs", "Wyeast", "Omega Yeast", "Imperial Yeast"];
+
     // Initial Data
     let steps = [];
     if (typeof bscRecipeData !== 'undefined' && bscRecipeData.steps) {
@@ -178,7 +217,11 @@ document.addEventListener('DOMContentLoaded', function() {
                             ${step.items.map((item, itemIndex) => {
                                 const isMalt = item.type === 'Malt';
                                 const isHop = item.type === 'Hop';
-                                const wrapperClass = isMalt ? 'bsc-item-malt-wrapper' : (isHop ? 'bsc-item-hop-wrapper' : '');
+                                const isYeast = item.type === 'Yeast';
+                                let wrapperClass = '';
+                                if(isMalt) wrapperClass = 'bsc-item-malt-wrapper';
+                                if(isHop) wrapperClass = 'bsc-item-hop-wrapper';
+                                if(isYeast) wrapperClass = 'bsc-item-yeast-wrapper';
 
                                 return `
                                 <div class="bsc-item-wrapper ${wrapperClass}">
@@ -194,11 +237,12 @@ document.addEventListener('DOMContentLoaded', function() {
                                         </select>
 
                                         ${isMalt ? renderMaltSelect(item.name, index, itemIndex) :
-                                          isHop ? renderHopSelect(item.name, index, itemIndex) : `
+                                          isHop ? renderHopSelect(item.name, index, itemIndex) :
+                                          isYeast ? renderYeastSelect(item.name, index, itemIndex) : `
                                         <input type="text" class="bsc-item-input" value="${esc(item.name)}" placeholder="Nom" onchange="bscUpdateItem(${index}, ${itemIndex}, 'name', this.value)">
                                         `}
 
-                                        <input type="text" class="bsc-item-input" value="${esc(item.qty)}" placeholder="Qté (ex: 5kg, 30g)" onchange="bscUpdateItem(${index}, ${itemIndex}, 'qty', this.value)">
+                                        <input type="text" class="bsc-item-input" value="${esc(item.qty)}" placeholder="Qté" onchange="bscUpdateItem(${index}, ${itemIndex}, 'qty', this.value)">
                                         <button type="button" class="bsc-btn-icon" onclick="bscRemoveItem(${index}, ${itemIndex})">&times;</button>
                                     </div>
 
@@ -223,6 +267,21 @@ document.addEventListener('DOMContentLoaded', function() {
                                     <div class="bsc-item-details bsc-hop-tags">
                                         <span class="bsc-tags-label">Profil: </span>
                                         ${renderAromaTags(item.aromas, index, itemIndex)}
+                                    </div>
+                                    ` : ''}
+
+                                    ${isYeast ? `
+                                    <div class="bsc-item-details bsc-yeast-details">
+                                        <select class="bsc-detail-input" onchange="bscUpdateItem(${index}, ${itemIndex}, 'brand', this.value)">
+                                            <option value="">Marque</option>
+                                            ${yeastBrands.map(b => `<option value="${b}" ${item.brand === b ? 'selected' : ''}>${b}</option>`).join('')}
+                                        </select>
+                                        <select class="bsc-detail-input" onchange="bscUpdateItem(${index}, ${itemIndex}, 'form', this.value)">
+                                            <option value="">Format</option>
+                                            ${yeastForms.map(f => `<option value="${f}" ${item.form === f ? 'selected' : ''}>${f}</option>`).join('')}
+                                        </select>
+                                        <input type="text" class="bsc-detail-input" placeholder="Atténuation %" value="${esc(item.attenuation)}" onchange="bscUpdateItem(${index}, ${itemIndex}, 'attenuation', this.value)">
+                                        <input type="text" class="bsc-detail-input" placeholder="Temp. Optimale" value="${esc(item.temp_opt)}" onchange="bscUpdateItem(${index}, ${itemIndex}, 'temp_opt', this.value)">
                                     </div>
                                     ` : ''}
 
@@ -270,13 +329,26 @@ document.addEventListener('DOMContentLoaded', function() {
         return `<select class="bsc-item-input bsc-hop-select" onchange="bscUpdateItem(${stepIndex}, ${itemIndex}, 'name', this.value)">${options}</select>`;
     }
 
+    // Render Yeast Select Helper
+    function renderYeastSelect(currentVal, stepIndex, itemIndex) {
+        let options = `<option value="">-- Choisir une Levure --</option>`;
+        for (const [category, items] of Object.entries(yeastList)) {
+            options += `<optgroup label="${category}">`;
+            items.forEach(yeast => {
+                const selected = yeast === currentVal ? 'selected' : '';
+                options += `<option value="${yeast}" ${selected}>${yeast}</option>`;
+            });
+            options += `</optgroup>`;
+        }
+        return `<select class="bsc-item-input bsc-yeast-select" onchange="bscUpdateItem(${stepIndex}, ${itemIndex}, 'name', this.value)">${options}</select>`;
+    }
+
     function renderAromaTags(currentAromas, stepIndex, itemIndex) {
         // currentAromas is array of strings
         const selected = Array.isArray(currentAromas) ? currentAromas : [];
         let html = '';
         aromaTags.forEach(tag => {
             const isChecked = selected.includes(tag) ? 'checked' : '';
-            // We use a temporary checkbox that updates the array
             html += `
                 <label class="bsc-tag-checkbox">
                     <input type="checkbox" value="${tag}" ${isChecked} onchange="bscToggleAroma(${stepIndex}, ${itemIndex}, this.value)">
@@ -373,9 +445,13 @@ document.addEventListener('DOMContentLoaded', function() {
     window.bscUpdateItem = function(stepIndex, itemIndex, key, value) {
         steps[stepIndex].items[itemIndex][key] = value;
 
-        // Check if changing type to Hop, we need to init hop fields if missing
+        // Init fields for Hop/Yeast
         if (key === 'type' && value === 'Hop') {
              if (!steps[stepIndex].items[itemIndex].aromas) steps[stepIndex].items[itemIndex].aromas = [];
+             render();
+             return;
+        }
+        if (key === 'type' && value === 'Yeast') {
              render();
              return;
         }
@@ -405,6 +481,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         let malts = [];
         let hops = [];
+        let yeasts = [];
         let mash = [];
         let ingredients = [];
         let equipment = [];
@@ -433,6 +510,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
                     if (extras.length > 0) line += ` [${extras.join(' | ')}]`;
                     hops.push(line);
+                }
+
+                if (item.type === 'Yeast') {
+                    const extras = [];
+                    if (item.brand) extras.push(item.brand);
+                    if (item.form) extras.push(item.form);
+                    if (item.attenuation) extras.push(`Atténuation: ${item.attenuation}%`);
+                    if (item.temp_opt) extras.push(`Temp: ${item.temp_opt}`);
+
+                    if (extras.length > 0) line += ` [${extras.join(' | ')}]`;
+                    yeasts.push(line);
                 }
 
                 if (item.type === 'Equipment') equipment.push(line);

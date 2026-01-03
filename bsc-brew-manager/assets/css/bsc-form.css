@@ -332,12 +332,6 @@
     transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
 }
 
-.bsc-btn-add-step:hover {
-    background-color: #1a252f;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 15px rgba(44, 62, 80, 0.4);
-}
-
 .bsc-remove-step {
     position: absolute;
     top: 15px;
@@ -491,4 +485,39 @@
     background: #e8f5e9;
     border-color: #81c784;
     color: #2e7d32;
+}
+
+/* === YEAST SPECIFIC STYLES === */
+.bsc-item-yeast-wrapper {
+    background: #fdfdfd;
+    border: 1px solid #fff3cd; /* Yellow/Orange tint */
+    border-radius: 8px;
+    margin-bottom: 10px;
+    padding: 10px;
+    transition: background 0.2s;
+}
+
+.bsc-item-yeast-wrapper:hover {
+    background: #fff9e6;
+}
+
+.bsc-item-yeast-wrapper .bsc-item-row {
+    margin-bottom: 8px;
+    background: transparent;
+    padding: 0;
+    border: none;
+}
+
+.bsc-yeast-details {
+    display: flex;
+    gap: 10px;
+    padding-left: 65px;
+    padding-right: 50px;
+    margin-bottom: 10px;
+}
+
+.bsc-yeast-select {
+    cursor: pointer;
+    background-color: #fff;
+    font-weight: 600;
 }
