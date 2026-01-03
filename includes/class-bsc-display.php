@@ -446,6 +446,13 @@ class BSC_Frontend_Display {
 												?>
 											</div>
 										<?php endif; ?>
+										<?php if ( $item['type'] === 'Equipment' && ( ! empty($item['brand']) ) ) : ?>
+											<div class="bsc-item-details" style="font-size:0.85em; color:#7f8c8d; padding-left: 65px; margin-top:-5px; margin-bottom:10px;">
+												<?php
+													echo '🏷️ ' . esc_html($item['brand']);
+												?>
+											</div>
+										<?php endif; ?>
 									<?php endforeach; ?>
 								<?php endif; ?>
 							</div>

@@ -124,6 +124,52 @@ document.addEventListener('DOMContentLoaded', function() {
     const yeastForms = ["Sèche", "Liquide", "Culture maison", "Réensemencement"];
     const yeastBrands = ["Fermentis", "Lallemand", "Mangrove Jack’s", "White Labs", "Wyeast", "Omega Yeast", "Imperial Yeast"];
 
+    // Equipment List Data
+    const equipmentList = {
+        "Source de Chauffe": [
+            "Réchaud gaz propane / butane", "Brûleur haute pression", "Plaque induction", "Résistance électrique immergée", "Système électrique intégré (All-in-One)"
+        ],
+        "Cuves & Marmites": [
+            "Marmite inox", "Cuve d’empâtage", "Cuve d’ébullition", "Cuve de rinçage", "Cuve filtrante"
+        ],
+        "Systèmes Tout-en-Un": [
+            "Grainfather G30", "Grainfather G40", "Grainfather G70", "Brew Monk", "Brewtools B40", "Brewtools B80", "Klarstein Mundschenk", "Brewferm Brewster", "Bulldog Brewer", "Arsegan Easybrew", "Speidel Braumeister", "Brewzilla"
+        ],
+        "Fermenteurs": [
+            "Seau plastique alimentaire", "Fermenteur PET", "Fermenteur inox", "Dame-jeanne en verre", "Fermenteur conique"
+        ],
+        "Contrôle Fermentation": [
+            "Chambre de fermentation", "Réfrigérateur modifié", "Ceinture chauffante", "Plaque chauffante", "Régulateur de température (Inkbird/STC-1000)"
+        ],
+        "Transfert": [
+            "Canne de soutirage", "Siphon auto", "Pompe alimentaire", "Tuyaux silicone", "Vannes inox"
+        ],
+        "Refroidissement": [
+            "Serpentin cuivre", "Serpentin inox", "Échangeur à plaques", "Refroidisseur immersion"
+        ],
+        "Mesure & Contrôle": [
+            "Densimètre", "Réfractomètre", "Thermomètre", "pH-mètre", "Balance de précision"
+        ],
+        "Moulins": [
+            "Moulin à malt manuel", "Moulin électrique", "Concasseur à rouleaux", "Concasseur à disques"
+        ],
+        "Nettoyage": [
+            "Starsan", "Chemipro Oxi", "PBW", "Désinfectant iodé", "Brosses", "Spray désinfectant"
+        ],
+        "Embouteillage": [
+            "Capsuleuse manuelle", "Capsuleuse de table", "Capsules", "Bouteilles", "Canne d’embouteillage", "Doseur de sucre"
+        ],
+        "Kegging (Pression)": [
+            "Fûts Cornelius", "Mini-fûts", "Bouteille CO₂", "Détendeur", "Robinets", "Tours à bière"
+        ],
+        "Automatisation": [
+            "Capteur de fermentation (Tilt/iSpindel)", "Plaques connectées"
+        ],
+        "Petit Matériel": [
+            "Spatules inox", "Cuillères longues", "Pinces", "Entonnoirs", "Tamis", "Gants thermiques"
+        ]
+    };
+
     // Initial Data
     let steps = [];
     if (typeof bscRecipeData !== 'undefined' && bscRecipeData.steps) {
@@ -218,10 +264,13 @@ document.addEventListener('DOMContentLoaded', function() {
                                 const isMalt = item.type === 'Malt';
                                 const isHop = item.type === 'Hop';
                                 const isYeast = item.type === 'Yeast';
+                                const isEquip = item.type === 'Equipment';
+
                                 let wrapperClass = '';
                                 if(isMalt) wrapperClass = 'bsc-item-malt-wrapper';
                                 if(isHop) wrapperClass = 'bsc-item-hop-wrapper';
                                 if(isYeast) wrapperClass = 'bsc-item-yeast-wrapper';
+                                if(isEquip) wrapperClass = 'bsc-item-equip-wrapper';
 
                                 return `
                                 <div class="bsc-item-wrapper ${wrapperClass}">
@@ -238,11 +287,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
                                         ${isMalt ? renderMaltSelect(item.name, index, itemIndex) :
                                           isHop ? renderHopSelect(item.name, index, itemIndex) :
-                                          isYeast ? renderYeastSelect(item.name, index, itemIndex) : `
+                                          isYeast ? renderYeastSelect(item.name, index, itemIndex) :
+                                          isEquip ? renderEquipSelect(item.name, index, itemIndex) : `
                                         <input type="text" class="bsc-item-input" value="${esc(item.name)}" placeholder="Nom" onchange="bscUpdateItem(${index}, ${itemIndex}, 'name', this.value)">
                                         `}
 
+                                        ${!isEquip ? `
                                         <input type="text" class="bsc-item-input" value="${esc(item.qty)}" placeholder="Qté" onchange="bscUpdateItem(${index}, ${itemIndex}, 'qty', this.value)">
+                                        ` : `
+                                        <input type="text" class="bsc-item-input" value="${esc(item.brand)}" placeholder="Marque / Notes" onchange="bscUpdateItem(${index}, ${itemIndex}, 'brand', this.value)">
+                                        `}
+
                                         <button type="button" class="bsc-btn-icon" onclick="bscRemoveItem(${index}, ${itemIndex})">&times;</button>
                                     </div>
 
@@ -341,6 +396,20 @@ document.addEventListener('DOMContentLoaded', function() {
             options += `</optgroup>`;
         }
         return `<select class="bsc-item-input bsc-yeast-select" onchange="bscUpdateItem(${stepIndex}, ${itemIndex}, 'name', this.value)">${options}</select>`;
+    }
+
+    // Render Equipment Select Helper
+    function renderEquipSelect(currentVal, stepIndex, itemIndex) {
+        let options = `<option value="">-- Choisir le Matériel --</option>`;
+        for (const [category, items] of Object.entries(equipmentList)) {
+            options += `<optgroup label="${category}">`;
+            items.forEach(equip => {
+                const selected = equip === currentVal ? 'selected' : '';
+                options += `<option value="${equip}" ${selected}>${equip}</option>`;
+            });
+            options += `</optgroup>`;
+        }
+        return `<select class="bsc-item-input bsc-equip-select" onchange="bscUpdateItem(${stepIndex}, ${itemIndex}, 'name', this.value)">${options}</select>`;
     }
 
     function renderAromaTags(currentAromas, stepIndex, itemIndex) {
@@ -455,6 +524,10 @@ document.addEventListener('DOMContentLoaded', function() {
              render();
              return;
         }
+        if (key === 'type' && value === 'Equipment') {
+             render();
+             return;
+        }
 
         if (key === 'type') {
             render();
@@ -523,7 +596,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     yeasts.push(line);
                 }
 
-                if (item.type === 'Equipment') equipment.push(line);
+                if (item.type === 'Equipment') {
+                    line = `${item.name}`;
+                    if (item.brand) line += ` [${item.brand}]`;
+                    equipment.push(line);
+                }
 
                 if (['Malt', 'Hop', 'Yeast', 'Adjunct'].includes(item.type)) {
                     ingredients.push(`${item.type}: ${line}`);
