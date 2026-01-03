@@ -6,6 +6,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class BSC_Frontend_Display {
 
+	private static $instance = null;
+
+	public static function get_instance() {
+		if ( null === self::$instance ) {
+			self::$instance = new self();
+		}
+		return self::$instance;
+	}
+
 	public function __construct() {
 		add_filter( 'the_content', array( $this, 'display_recipe_details' ) );
 		add_action( 'wp_footer', array( $this, 'render_tasting_modal' ) );

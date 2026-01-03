@@ -139,7 +139,7 @@ class BSC_Elementor_Beer_Info_Widget extends \Elementor\Widget_Base {
             $steps = $steps_json ? json_decode( $steps_json, true ) : null;
             if ( $steps ) {
                 if ( class_exists( 'BSC_Frontend_Display' ) ) {
-                    $display = new \BSC_Frontend_Display();
+                    $display = \BSC_Frontend_Display::get_instance();
                     echo $display->render_timeline_html( $steps );
                 }
             }
