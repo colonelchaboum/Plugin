@@ -406,6 +406,24 @@ class BSC_Frontend_Display {
 												?>
 											</div>
 										<?php endif; ?>
+										<?php if ( $item['type'] === 'Hop' && ( ! empty($item['alpha']) || ! empty($item['form']) || ! empty($item['origin']) || ! empty($item['aromas']) ) ) : ?>
+											<div class="bsc-item-details" style="font-size:0.85em; color:#2e7d32; padding-left: 65px; margin-top:-5px; margin-bottom:10px;">
+												<?php
+													$details = [];
+													if( ! empty($item['alpha']) ) $details[] = '🧪 ' . esc_html($item['alpha']) . '% AA';
+													if( ! empty($item['form']) ) $details[] = '📦 ' . esc_html($item['form']);
+													if( ! empty($item['origin']) ) $details[] = '🌍 ' . esc_html($item['origin']);
+
+													// Aromas (array or string)
+													if( ! empty($item['aromas']) ) {
+														$aromas = is_array($item['aromas']) ? implode(', ', $item['aromas']) : $item['aromas'];
+														$details[] = '🌸 ' . esc_html($aromas);
+													}
+
+													echo implode(' &nbsp;&bull;&nbsp; ', $details);
+												?>
+											</div>
+										<?php endif; ?>
 									<?php endforeach; ?>
 								<?php endif; ?>
 							</div>

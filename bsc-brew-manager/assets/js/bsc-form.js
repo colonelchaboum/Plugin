@@ -51,6 +51,40 @@ document.addEventListener('DOMContentLoaded', function() {
         ]
     };
 
+    // Hop List Data
+    const hopList = {
+        "Amérisants": [
+            "Magnum", "Warrior", "Columbus (CTZ)", "Tomahawk", "Zeus", "Chinook", "Target", "Galena",
+            "Horizon", "Nugget", "Bravo", "Apollo", "Northern Brewer", "Brewer’s Gold", "Pride of Ringwood", "Herkules", "Pahto"
+        ],
+        "Aromatiques (Europe)": [
+            "Hallertau Mittelfrüh", "Hallertau Tradition", "Tettnang", "Spalt", "Spalter Select", "Hersbrucker", "Perle",
+            "Saaz", "Strisselspalt", "Aramis", "Triskel", "Bouclier",
+            "East Kent Goldings (EKG)", "Fuggle", "Challenger", "Bramling Cross", "Progress", "First Gold"
+        ],
+        "Modernes (USA/Pacific)": [
+            "Cascade", "Centennial", "Citra", "Amarillo", "Simcoe", "Mosaic", "Idaho 7", "El Dorado", "Azacca", "Sabro", "Cashmere", "Crystal", "Liberty", "Mount Hood",
+            "Galaxy", "Vic Secret", "Enigma", "Ella", "Motueka", "Nelson Sauvin", "Riwaka", "Wai-iti", "Pacific Jade", "Pacifica"
+        ],
+        "Expérimentaux / Nouveaux": [
+            "HBC 472", "HBC 586 (Krush)", "HBC 630", "HBC 638", "HBC 682", "HBC 692", "HBC 1019", "HBC 431",
+            "YCH 301 (Popcorn)", "Sabro Cryo", "Citra Cryo", "Mosaic Cryo"
+        ],
+        "Européens Modernes": [
+            "Mandarina Bavaria", "Hallertau Blanc", "Huell Melon", "Ariana", "Callista", "Saphir", "Polaris"
+        ],
+        "Spéciaux": [
+            "Styrian Goldings", "Lubelski", "Loral", "Sorachi Ace", "Sterling"
+        ]
+    };
+
+    const hopForms = ["Pellets T90", "Pellets T45", "Cônes entiers", "Cryo Hops", "Hop Extract"];
+
+    const aromaTags = [
+        "Agrumes", "Fruits Tropicaux", "Fruits à noyau", "Résine / Pin", "Floral",
+        "Épicé", "Herbacé", "Terreux", "Vin blanc", "Noix de coco", "Fruits rouges"
+    ];
+
     // Initial Data
     let steps = [];
     if (typeof bscRecipeData !== 'undefined' && bscRecipeData.steps) {
@@ -143,8 +177,11 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div class="bsc-items-container">
                             ${step.items.map((item, itemIndex) => {
                                 const isMalt = item.type === 'Malt';
+                                const isHop = item.type === 'Hop';
+                                const wrapperClass = isMalt ? 'bsc-item-malt-wrapper' : (isHop ? 'bsc-item-hop-wrapper' : '');
+
                                 return `
-                                <div class="bsc-item-wrapper ${isMalt ? 'bsc-item-malt-wrapper' : ''}">
+                                <div class="bsc-item-wrapper ${wrapperClass}">
                                     <div class="bsc-item-row">
                                         <div class="bsc-item-icon">${getIngredientIcon(item.type)}</div>
                                         <select class="bsc-item-select" onchange="bscUpdateItem(${index}, ${itemIndex}, 'type', this.value)">
@@ -156,11 +193,12 @@ document.addEventListener('DOMContentLoaded', function() {
                                             <option value="Equipment" ${item.type === 'Equipment' ? 'selected' : ''}>Matériel</option>
                                         </select>
 
-                                        ${isMalt ? renderMaltSelect(item.name, index, itemIndex) : `
+                                        ${isMalt ? renderMaltSelect(item.name, index, itemIndex) :
+                                          isHop ? renderHopSelect(item.name, index, itemIndex) : `
                                         <input type="text" class="bsc-item-input" value="${esc(item.name)}" placeholder="Nom" onchange="bscUpdateItem(${index}, ${itemIndex}, 'name', this.value)">
                                         `}
 
-                                        <input type="text" class="bsc-item-input" value="${esc(item.qty)}" placeholder="Qté (ex: 5kg)" onchange="bscUpdateItem(${index}, ${itemIndex}, 'qty', this.value)">
+                                        <input type="text" class="bsc-item-input" value="${esc(item.qty)}" placeholder="Qté (ex: 5kg, 30g)" onchange="bscUpdateItem(${index}, ${itemIndex}, 'qty', this.value)">
                                         <button type="button" class="bsc-btn-icon" onclick="bscRemoveItem(${index}, ${itemIndex})">&times;</button>
                                     </div>
 
@@ -171,6 +209,23 @@ document.addEventListener('DOMContentLoaded', function() {
                                         <input type="number" class="bsc-detail-input" placeholder="Rendement %" value="${esc(item.yield)}" onchange="bscUpdateItem(${index}, ${itemIndex}, 'yield', this.value)">
                                     </div>
                                     ` : ''}
+
+                                    ${isHop ? `
+                                    <div class="bsc-item-details bsc-hop-details">
+                                        <input type="number" class="bsc-detail-input" placeholder="AA %" value="${esc(item.alpha)}" onchange="bscUpdateItem(${index}, ${itemIndex}, 'alpha', this.value)">
+                                        <select class="bsc-detail-input" onchange="bscUpdateItem(${index}, ${itemIndex}, 'form', this.value)">
+                                            <option value="">Forme</option>
+                                            ${hopForms.map(f => `<option value="${f}" ${item.form === f ? 'selected' : ''}>${f}</option>`).join('')}
+                                        </select>
+                                        <input type="text" class="bsc-detail-input" placeholder="Année" value="${esc(item.year)}" onchange="bscUpdateItem(${index}, ${itemIndex}, 'year', this.value)">
+                                        <input type="text" class="bsc-detail-input" placeholder="Origine" value="${esc(item.origin)}" onchange="bscUpdateItem(${index}, ${itemIndex}, 'origin', this.value)">
+                                    </div>
+                                    <div class="bsc-item-details bsc-hop-tags">
+                                        <span class="bsc-tags-label">Profil: </span>
+                                        ${renderAromaTags(item.aromas, index, itemIndex)}
+                                    </div>
+                                    ` : ''}
+
                                 </div>
                             `;}).join('')}
                             <button type="button" class="bsc-btn-add-item" onclick="bscAddItem(${index})">+ Ajouter un élément</button>
@@ -199,6 +254,37 @@ document.addEventListener('DOMContentLoaded', function() {
             options += `</optgroup>`;
         }
         return `<select class="bsc-item-input bsc-malt-select" onchange="bscUpdateItem(${stepIndex}, ${itemIndex}, 'name', this.value)">${options}</select>`;
+    }
+
+    // Render Hop Select Helper
+    function renderHopSelect(currentVal, stepIndex, itemIndex) {
+        let options = `<option value="">-- Choisir un Houblon --</option>`;
+        for (const [category, items] of Object.entries(hopList)) {
+            options += `<optgroup label="${category}">`;
+            items.forEach(hop => {
+                const selected = hop === currentVal ? 'selected' : '';
+                options += `<option value="${hop}" ${selected}>${hop}</option>`;
+            });
+            options += `</optgroup>`;
+        }
+        return `<select class="bsc-item-input bsc-hop-select" onchange="bscUpdateItem(${stepIndex}, ${itemIndex}, 'name', this.value)">${options}</select>`;
+    }
+
+    function renderAromaTags(currentAromas, stepIndex, itemIndex) {
+        // currentAromas is array of strings
+        const selected = Array.isArray(currentAromas) ? currentAromas : [];
+        let html = '';
+        aromaTags.forEach(tag => {
+            const isChecked = selected.includes(tag) ? 'checked' : '';
+            // We use a temporary checkbox that updates the array
+            html += `
+                <label class="bsc-tag-checkbox">
+                    <input type="checkbox" value="${tag}" ${isChecked} onchange="bscToggleAroma(${stepIndex}, ${itemIndex}, this.value)">
+                    ${tag}
+                </label>
+            `;
+        });
+        return `<div class="bsc-tags-container">${html}</div>`;
     }
 
     // Helpers
@@ -287,18 +373,31 @@ document.addEventListener('DOMContentLoaded', function() {
     window.bscUpdateItem = function(stepIndex, itemIndex, key, value) {
         steps[stepIndex].items[itemIndex][key] = value;
 
-        // If changing type away from Malt, clear the malt specific fields? No need, just hide them.
-        // But if changing TO malt, they might be undefined, but render() handles that via esc() returning ''.
+        // Check if changing type to Hop, we need to init hop fields if missing
+        if (key === 'type' && value === 'Hop') {
+             if (!steps[stepIndex].items[itemIndex].aromas) steps[stepIndex].items[itemIndex].aromas = [];
+             render();
+             return;
+        }
 
-        // Force re-render only if type changed (to switch input <-> select)
         if (key === 'type') {
             render();
         } else {
-            // Optimization: Don't re-render whole tree for text input?
-            // Actually render() is safe but loses focus if we are not careful.
-            // But here we are using onchange (blur), so losing focus is fine.
             updateHiddenInputs();
         }
+    };
+
+    window.bscToggleAroma = function(stepIndex, itemIndex, tag) {
+        let item = steps[stepIndex].items[itemIndex];
+        if (!item.aromas) item.aromas = [];
+
+        const idx = item.aromas.indexOf(tag);
+        if (idx > -1) {
+            item.aromas.splice(idx, 1);
+        } else {
+            item.aromas.push(tag);
+        }
+        updateHiddenInputs();
     };
 
     function updateHiddenInputs() {
@@ -325,7 +424,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     malts.push(line);
                 }
 
-                if (item.type === 'Hop') hops.push(line);
+                if (item.type === 'Hop') {
+                    const extras = [];
+                    if (item.alpha) extras.push(`${item.alpha}% AA`);
+                    if (item.form) extras.push(item.form);
+                    if (item.origin) extras.push(item.origin);
+                    if (item.aromas && item.aromas.length > 0) extras.push(`Profil: ${item.aromas.join(', ')}`);
+
+                    if (extras.length > 0) line += ` [${extras.join(' | ')}]`;
+                    hops.push(line);
+                }
+
                 if (item.type === 'Equipment') equipment.push(line);
 
                 if (['Malt', 'Hop', 'Yeast', 'Adjunct'].includes(item.type)) {

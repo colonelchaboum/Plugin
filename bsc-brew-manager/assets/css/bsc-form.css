@@ -406,3 +406,89 @@
     background-color: #fff;
     font-weight: 600;
 }
+
+/* === HOP SPECIFIC STYLES === */
+.bsc-item-hop-wrapper {
+    background: #fdfdfd;
+    border: 1px solid #d4edda; /* Light green tint */
+    border-radius: 8px;
+    margin-bottom: 10px;
+    padding: 10px;
+    transition: background 0.2s;
+}
+
+.bsc-item-hop-wrapper:hover {
+    background: #f0fdf4;
+}
+
+.bsc-item-hop-wrapper .bsc-item-row {
+    margin-bottom: 8px;
+    background: transparent;
+    padding: 0;
+    border: none;
+}
+
+.bsc-hop-details {
+    display: flex;
+    gap: 10px;
+    padding-left: 65px;
+    padding-right: 50px;
+    margin-bottom: 10px;
+}
+
+.bsc-hop-select {
+    cursor: pointer;
+    background-color: #fff;
+    font-weight: 600;
+}
+
+.bsc-hop-tags {
+    padding-left: 65px;
+    padding-right: 50px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.bsc-tags-label {
+    font-size: 0.8em;
+    font-weight: bold;
+    color: #666;
+    margin-right: 5px;
+}
+
+.bsc-tags-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.bsc-tag-checkbox {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.8em;
+    background: #fff;
+    border: 1px solid #dcdcdc;
+    border-radius: 20px;
+    padding: 4px 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    user-select: none;
+}
+
+.bsc-tag-checkbox:hover {
+    border-color: #aaa;
+    background: #f9f9f9;
+}
+
+.bsc-tag-checkbox input {
+    margin-right: 5px;
+}
+
+/* Make checked tags look active */
+.bsc-tag-checkbox:has(input:checked) {
+    background: #e8f5e9;
+    border-color: #81c784;
+    color: #2e7d32;
+}
