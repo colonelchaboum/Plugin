@@ -15,6 +15,10 @@
 5. Choisissez le fichier `bsc-brew-manager.zip` que vous venez de créer.
 6. Cliquez sur **Installer maintenant** puis **Activer**.
 
+### Dépannage
+**Erreur : "L’archive n’a pas pu être installée. Aucune extension valide trouvée."**
+Cela signifie que vous avez probablement zippé le dossier racine du dépôt (qui contient le dossier `bsc-brew-manager`) au lieu de zipper le dossier du plugin lui-même. WordPress ne cherche pas les plugins dans les sous-dossiers. Assurez-vous que votre fichier zip contient directement `bsc-brew-manager.php` à l'intérieur du dossier compressé (structure: `votre-zip.zip > bsc-brew-manager > bsc-brew-manager.php`).
+
 ## 🇬🇧 Installation (English)
 
 **Important:** This repository contains the source code. Downloading the repository zip from GitHub will give you a file containing the root folder. **This file cannot be installed directly on WordPress** because the plugin resides in a subfolder.
@@ -27,6 +31,10 @@
 4. In your WordPress Admin, go to **Plugins > Add New > Upload Plugin**.
 5. Select the `bsc-brew-manager.zip` file you created.
 6. Click **Install Now** and then **Activate**.
+
+### Troubleshooting
+**Error: "The package could not be installed. No valid plugins were found."**
+This means you likely zipped the repository root (containing `bsc-brew-manager` folder) instead of the plugin folder itself. WordPress does not scan subdirectories for plugins. Ensure your zip file contains `bsc-brew-manager.php` inside the compressed folder (structure: `your-zip.zip > bsc-brew-manager > bsc-brew-manager.php`).
 
 ---
 
