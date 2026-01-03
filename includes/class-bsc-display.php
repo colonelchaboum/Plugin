@@ -453,6 +453,11 @@ class BSC_Frontend_Display {
 												?>
 											</div>
 										<?php endif; ?>
+										<?php if ( ! empty($item['notes']) ) : ?>
+											<div class="bsc-item-note-display" style="font-size:0.85em; color:#555; padding-left: 65px; margin-top:0px; font-style:italic;">
+												<?php echo '📝 ' . esc_html($item['notes']); ?>
+											</div>
+										<?php endif; ?>
 									<?php endforeach; ?>
 								<?php endif; ?>
 							</div>

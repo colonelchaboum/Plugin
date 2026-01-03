@@ -295,7 +295,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                         ${!isEquip ? `
                                         <input type="text" class="bsc-item-input" value="${esc(item.qty)}" placeholder="Qté" onchange="bscUpdateItem(${index}, ${itemIndex}, 'qty', this.value)">
                                         ` : `
-                                        <input type="text" class="bsc-item-input" value="${esc(item.brand)}" placeholder="Marque / Notes" onchange="bscUpdateItem(${index}, ${itemIndex}, 'brand', this.value)">
+                                        <input type="text" class="bsc-item-input" value="${esc(item.brand)}" placeholder="Marque" onchange="bscUpdateItem(${index}, ${itemIndex}, 'brand', this.value)">
                                         `}
 
                                         <button type="button" class="bsc-btn-icon" onclick="bscRemoveItem(${index}, ${itemIndex})">&times;</button>
@@ -339,6 +339,10 @@ document.addEventListener('DOMContentLoaded', function() {
                                         <input type="text" class="bsc-detail-input" placeholder="Temp. Optimale" value="${esc(item.temp_opt)}" onchange="bscUpdateItem(${index}, ${itemIndex}, 'temp_opt', this.value)">
                                     </div>
                                     ` : ''}
+
+                                    <div class="bsc-item-notes-row">
+                                        <input type="text" class="bsc-detail-input bsc-full-width" placeholder="Commentaires / Notes sur cet ingrédient" value="${esc(item.notes)}" onchange="bscUpdateItem(${index}, ${itemIndex}, 'notes', this.value)">
+                                    </div>
 
                                 </div>
                             `;}).join('')}
@@ -511,7 +515,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Default to Malt if no type provided
         if (!type) type = 'Malt';
 
-        let newItem = { type: type, name: '', qty: '' };
+        let newItem = { type: type, name: '', qty: '', notes: '' };
 
         // Initialize fields based on type to prevent render errors or undefined states
         if (type === 'Malt') {
@@ -521,7 +525,7 @@ document.addEventListener('DOMContentLoaded', function() {
         } else if (type === 'Yeast') {
             newItem.brand = ''; newItem.form = ''; newItem.attenuation = ''; newItem.temp_opt = '';
         } else if (type === 'Equipment') {
-            newItem.brand = ''; // Used for Notes
+            newItem.brand = ''; // Just Brand
         } else {
             newItem.type = 'Adjunct'; // 'Autre'
         }
@@ -594,6 +598,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     const extras = [];
                     if (item.supplier) extras.push(item.supplier);
                     if (item.ebc) extras.push(`${item.ebc} EBC`);
+                    if (item.notes) extras.push(`Note: ${item.notes}`);
                     if (extras.length > 0) line += ` [${extras.join(', ')}]`;
                     malts.push(line);
                 }
@@ -604,6 +609,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (item.form) extras.push(item.form);
                     if (item.origin) extras.push(item.origin);
                     if (item.aromas && item.aromas.length > 0) extras.push(`Profil: ${item.aromas.join(', ')}`);
+                    if (item.notes) extras.push(`Note: ${item.notes}`);
 
                     if (extras.length > 0) line += ` [${extras.join(' | ')}]`;
                     hops.push(line);
@@ -615,6 +621,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (item.form) extras.push(item.form);
                     if (item.attenuation) extras.push(`Atténuation: ${item.attenuation}%`);
                     if (item.temp_opt) extras.push(`Temp: ${item.temp_opt}`);
+                    if (item.notes) extras.push(`Note: ${item.notes}`);
 
                     if (extras.length > 0) line += ` [${extras.join(' | ')}]`;
                     yeasts.push(line);
@@ -623,6 +630,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (item.type === 'Equipment') {
                     line = `${item.name}`;
                     if (item.brand) line += ` [${item.brand}]`;
+                    if (item.notes) line += ` (Note: ${item.notes})`;
                     equipment.push(line);
                 }
 
