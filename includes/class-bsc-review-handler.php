@@ -4,7 +4,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-class BSC_Reviews {
+class BSC_Review_Handler {
 
 	public function __construct() {
 		add_action( 'comment_form_logged_in_after', array( $this, 'add_rating_fields' ) );
